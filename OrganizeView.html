@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!--<base target="_top"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <style>
+      /* Make mobile half decent */
+      @media screen and (max-width: 70em) { 
+        * { 
+        font-size:4vw;
+        max-width:100%;
+        } 
+        button {
+          font-size: 3vw;
+        }
+        a {
+          font-size: 3vw;
+        }
+        p {
+          max-height: 9vw;
+      }
+      }
+      
+      td {
+         border-width: 1px;
+         border-style: solid;
+         padding: 10px;
+      }
+      p {
+        overflow: clip;
+        overflow: hidden;
+        word-wrap:break-word;
+        max-height: 2vw;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>
+      Organize <button onclick="reloadWithFullDay();">See top events </button><button onclick="reloadWithoutFullDay();">Refresh</button><button><a target="__blank" href="https://script.google.com/macros/s/AKfycbyZREQgftIDsYyV_tkEuIahowwYCiD8CVTMWftneIrc/dev?whatsNext=true">Whats Next</a></button>
+    </h1>
+    <select name="Domain" id="domain">
+  <option value="All">All</option>
+  <option value="volvo">Volvo</option>
+  <option value="saab">Saab</option>
+  <option value="mercedes">Mercedes</option>
+  <option value="audi">Audi</option>
+</select>
+ <label for="cars">Additional Filters</label>
+<select name="cars" id="Categories">
+  <option value="All">All</option>
+  <option value="volvo">Volvo</option>
+  <option value="saab">Saab</option>
+  <option value="mercedes">Mercedes</option>
+  <option value="audi">Audi</option>
+</select>
+ <br>
+<input type="text" name="Search" id="searchBox" size="20">
+<br><br>
+<button><a target="__blank" href="https://docs.google.com/forms/d/e/1FAIpQLScFfscOqt8TnLc6PiLWc8qwTY03A33fQfabXFLQzdWbtjoAtg/viewform?usp=pp_url&entry.756313724=N&entry.1283930567=2021-06-06">Create NEW Item</a></button>
+    <div id="currentPeriod">Loading current period...</div>
+    <div id="nextEvents">Loading Events...</div>
+    <div id="eventBlocks">Loading CurrentTimeBlock...</div>
+  <script>
+      function formatDateToPaddedHumanReadable(dateToFormat) {
+        var d = dateToFormat;
+        year = d.getFullYear();
+        month = ('' + (d.getMonth() + 1)).padStart(2, "0");
+        day = ('' + d.getDate()).padStart(2, "0");
+        hour = ('' + d.getHours()).padStart(2, "0");
+        minute = ('' + d.getMinutes()).padStart(2, "0");
+        var dateObj = {
+          year: year,
+          month: month,
+          day: day,
+          hour: hour,
+          minute: minute
+        };
+        return dateObj;
+    }
+    
+      function formatDateToClockPlusFullDay(dateToFormat) {
+        var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
+        return dateObj.year + "-" + dateObj.month + '-' + dateObj.day + ' '+ dateObj.hour + ":" + dateObj.minute;
+      }
+      
+      function formatDateToClock(dateToFormat) {
+        var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
+        return dateObj.hour + ":" + dateObj.minute;
+      }
+ 
+      function openEditWorkitem(editLink, newStatus) {
+        window.open(editLink + "&entry.756313724="+ newStatus);
+      }
+
+      function expandParagraph(elmnt) {
+        if(elmnt.style.maxHeight === "100vw") {
+          elmnt.style.maxHeight = "9vw"
+        } else {
+          elmnt.style.maxHeight = "100vw";
+        }
+      }
+
+      function reloadWithFullDay() {
+        showTopEventsPP = true;
+        google.script.run.withSuccessHandler(onNextEventsSuccess)
+          .findEventsInCalendarForDay(dateStartOfDay  + '');
+      }
+
+      function reloadWithoutFullDay() {
+        showTopEventsPP = false;
+        google.script.run.withSuccessHandler(onNextEventsSuccess)
+          .findEventsInCalendarForDay(dateStartOfDay  + '');
+      }
+
+      function fillDomainFiltersWithWorkitems(workitemsByUuid) {
+         domainToWorkItem = {};
+         for ([eventUuid, workItem] of Object.entries(workitemsByUuid)) { 
+          if(workItem["domain"]) {
+            if(domainToWorkItem[workItem["domain"].trim()]){
+              // do nothing
+            } else {
+              domainToWorkItem[workItem["domain"].trim()]  = true;
+            }
+          }
+        }
+        var domainSelect = document.getElementById('domain');
+        while (domainSelect.lastChild) {
+          domainSelect.removeChild(domainSelect.lastChild);
+        }
+
+        domainsSorted = ["All"];
+        for ([category, thing] of Object.entries(domainToWorkItem)) {
+          domainsSorted.push(category);
+        }
+
+        domainsSorted.sort();
+        for (domain of domainsSorted) {
+          var myoption = document.createElement('option');
+          myoption.value = domain;
+          myoption.innerHTML = domain;
+          domainSelect.appendChild(myoption);
+        }
+
+        //console.log("filtersToUids: " + JSON.stringify(additionFilterToUuid));
+      }
+
+      function fillAdditionalFiltersWithWorkitems(workitemsByUuid) {
+        additionFilterToWorkItem = {};
+         for ([eventUuid, workItem] of Object.entries(workitemsByUuid)) { 
+          if(workItem["categories"]) {
+            var categoryList = workItem["categories"].split(',')
+            for (category of categoryList) {
+              if (category && category.trim() !== '') {
+                if(additionFilterToWorkItem[category.trim()]){
+                  additionFilterToWorkItem[category.trim()] += 1;
+                } else {
+                  additionFilterToWorkItem[category.trim()] = 1;
+                }
+              }
+            }
+          }
+        }
+        additionFilterToWorkItem["All"] = Object.entries(workitemsByUuid).length;
+        var categorySelect = document.getElementById('Categories');
+        while (categorySelect.lastChild) {
+          categorySelect.removeChild(categorySelect.lastChild);
+        }
+
+        categoriesSorted = [];
+        for ([category, workItems] of Object.entries(additionFilterToWorkItem)) {
+          categoriesSorted.push(category.trim());
+        }
+
+        categoriesSorted.sort();
+        for (category of categoriesSorted) {
+          var myoption = document.createElement('option');
+          myoption.value = category;
+          myoption.innerHTML = category + " ("+ additionFilterToWorkItem[category] +")";
+          categorySelect.appendChild(myoption);
+        }
+
+        //console.log("filtersToUids: " + JSON.stringify(additionFilterToUuid));
+      }
+
+      function evaluateFilters(workitemsByUuid) {
+          for ([eventUuid, workItem] of Object.entries(workitemsByUuid)) {  
+              workItem["visible"] = true;
+          }
+
+          var domainSelect = document.getElementById('domain');
+          domainValue = domainSelect.value;
+          if (domainValue !== "All") {
+            for ([eventUuid, workItem] of Object.entries(workitemsByUuid)) { 
+              if(workItem["domain"] !== domainValue) {
+                workItem["visible"] = false;
+              }
+            }
+          }
+
+          var categorySelect = document.getElementById('Categories');
+          categoryValue = categorySelect.value;
+          if (categoryValue !== "All") {
+            for ([eventUuid, workItem] of Object.entries(workitemsByUuid)) { 
+              var foundCategory = false;
+              if(workItem["categories"]) {
+                var categoryList = workItem["categories"].split(',')
+                for (category of categoryList) {
+                  if (category && category.trim() === categoryValue) {
+                    foundCategory = true;
+                  }
+                }
+              }
+              if(!foundCategory) {
+                workItem["visible"] = false;
+              }
+            }
+          }
+
+          var searchBox = document.getElementById('searchBox');
+          searchBoxValue = searchBox.value;
+          if (searchBoxValue && searchBoxValue.trim() !== "") {
+            for ([eventUuid, workItem] of Object.entries(workitemsByUuid)) { 
+              var foundSearch = false;
+              if(workItem["name"] && workItem["name"].toLowerCase().includes(searchBoxValue.trim().toLowerCase())) {
+               foundSearch = true;
+              }
+              else if (workItem["comment"] && workItem["comment"].toLowerCase().includes(searchBoxValue.trim().toLowerCase())) {
+               foundSearch = true;
+              }
+              else if (workItem["milestoneName"] && workItem["milestoneName"].toLowerCase().includes(searchBoxValue.trim().toLowerCase())) {
+               foundSearch = true;
+              }
+              if(!foundSearch) {
+                workItem["visible"] = false;
+              }
+            }
+          }
+
+          var eventsDiv = document.getElementById("nextEvents");
+          eventsDiv.innerHTML = workItemsToHtml(workitemsByUuid);
+      }
+
+      function workItemsToHtml(workitemsByUuid) {
+        var htmlOutput = "";
+        var eventCount = 0;
+        var workItemsArr = [];
+
+        for ([eventUuid, workItem] of Object.entries(workitemsByUuid)) { 
+          workItemsArr.push(workItem);
+        }
+
+        workItemsArr.sort(function(a, b) {
+          return parseFloat(b.order) - parseFloat(a.order);
+        });
+
+        var count = 0;
+        for (workItem of workItemsArr) { 
+          if (workItem["visible"]) {
+              count += 1;
+          }
+        }
+
+          htmlOutput += count + " items ";
+          htmlOutput += "<br>";
+
+        for (workItem of workItemsArr) { 
+
+          if (!workItem["visible"]) {
+            continue;
+          }
+
+          htmlOutput += "<div>";
+          var workName = workItem["name"];
+          var boldLength = 30;
+          var boldName = workName.substr(0,Math.min(workName.length,boldLength));
+          var restName = "";
+          if (workName.length > boldLength) {
+            restName = workItem["name"].substr(boldLength, workItem["name"].length);
+          }
+          htmlOutput += "<span>" + "<strong>" + boldName + "</strong>" + restName +"</span>";
+          htmlOutput += '&nbsp;<a target="_blank" href="' + workItem["externalLink"] + '"> ' + workItem["externalLinkAnchor"] + "</a> " + "</td>" ;
+          htmlOutput += "<span>#" + Math.round(parseFloat(workItem["order"])) +" - </span>";
+          var dueDate = "-";
+          if (new Date(workItem["dueDate"]).getFullYear() > -2000) {
+            dueDate = formatDateToClockPlusFullDay(new Date(workItem["dueDate"]));
+          }
+          var nextScheduledDate = "-";
+          if (new Date(workItem["nextScheduledTime"]).getFullYear() > -2000) {
+            nextScheduledDate = formatDateToClockPlusFullDay(new Date(workItem["nextScheduledTime"]));
+          }
+
+          htmlOutput += "<div>-- " + workItem["domain"] + " - Due: " + dueDate +  " Scheduled:  " + '<a target="_blank" href="' + workItem["editEventLink"] + '">' + nextScheduledDate + "</a> -- " 
+          + '<a target="_blank" href="' + workItem["scheduleNewLink"] + '"> Schedule New</a>'
+                      + "</div>"
+            var workItemEditLink = workItem['editLink'];
+            htmlOutput += "<div>-- &nbsp;" + workItem['LOE'] + " of " + workItem['originalLOE'] + " hours left. " + " ";
+            if (workItem['status'] === "N") {
+              htmlOutput += '<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'In Progress\')">mark in progress</button>';
+            } else if (workItem['status'] === "In Progress"){
+              htmlOutput += '(A)<button onClick="openEditWorkitem(\''+workItemEditLink + '\', \'N\')">stop progress</button>';
+            }
+            if (workItem['status'] === "Y") {
+              htmlOutput += '(D))<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'In Progress\')">mark as not done</button>';
+            } else {
+              htmlOutput += '<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'Y\')">mark complete</button>';
+            }
+            htmlOutput += '<p onclick="expandParagraph(this)"> -- Notes: <button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'\')">edit</button> ' + workItem["comment"] + "</p>";
+            htmlOutput += "<br></div>";
+          
+eventCount = eventCount + 1;
+          htmlOutput += "</div>";
+          if (eventCount > 5 && showTopEventsPP === true) {
+            break;
+          }
+                
+          /*rowCopy["name"] = data[row][nameColumnIndex];
+          rowCopy["createdTime"] =  data[row][createdColumnIndex];
+          rowCopy["editedTime"] =  data[row][timestampColumnIndex];
+          rowCopy["editLink"] =  data[row][editColumnIndex];
+          rowCopy["comment"] =  data[row][commentColumnIndex];
+          rowCopy["status"] =  data[row][doneColumnIndex];
+          rowCopy["LOE"] =  data[row][loeColumnIndex]; 
+          rowCopy["originalLOE"] =  data[row][originalLoeColumnIndex]; 
+          rowCopy["completionDate"] =  data[row][completionDateColumnIndex]; 
+          rowCopy["milestoneName"] =  data[row][milestoneColumnIndex];
+          rowCopy["nextScheduledTime"] =  data[row][nextScheduledEventColumnIndex];
+          rowCopy["editEventLink"] =  data[row][nextScheduledEventLinkColumnIndex];
+          rowCopy["uuid"] =  data[row][UuidColumnIndex];
+          rowCopy["order"]
+          rowCopy["domain"]
+          rowCopy["Ext Link -> externalLink"]
+          rowCopy["externalLinkAnchor"]  
+          rowCopy["Custom Scheduler -> scheduleNewLink"]
+          rowCopy["Due Date -> dueDate"]
+          rowCopy["categories"] = data[row][categoriesColumnIndex] + "";
+
+          */
+        }
+        return htmlOutput;
+      }
+
+      function timeBlocksToHtml(events) {
+        return ""; //JSON.stringify(events)
+      }
+
+      function onNextEventsSuccess(nextEventsArgs) {
+        //console.log("nextEventArgs " + JSON.stringify(nextEventsArgs));
+        google.script.run.withSuccessHandler(onWorkItemsSuccess)
+          .getAllWorkitems();
+      }
+
+      function onWorkItemsSuccess(workitems) {
+        //console.log("workItemsArgs " + JSON.stringify(workitems));
+        var eventsDiv = document.getElementById("nextEvents");
+        var eventsTable = document.getElementById("nextEventsTable");
+        for ([eventUuid, workItem] of Object.entries(workitems)) {  
+              workItem["visible"] = true;
+        }
+        eventsDiv.innerHTML = workItemsToHtml(workitems);
+        fillAdditionalFiltersWithWorkitems(workitems);
+        fillDomainFiltersWithWorkitems(workitems);
+        
+        var domainSelect = document.getElementById('domain');
+        domainSelect.onchange = function() {
+          evaluateFilters(workitems)
+        };
+
+        var categorySelect = document.getElementById('Categories');
+        categorySelect.onchange = function() {
+          evaluateFilters(workitems)
+        };
+
+        var searchBox = document.getElementById('searchBox');
+        searchBox.onchange = function() {
+          evaluateFilters(workitems)
+        };
+      }
+
+      function onTimeBlockSuccess(nextEventsArgs) {
+        var blocksDiv = document.getElementById("eventBlocks");
+        blocksDiv.innerHTML = timeBlocksToHtml(nextEventsArgs.events);
+      }
+
+      function onIntervalFire() {
+        var currentPeriodDiv = document.getElementById("currentPeriod");
+        var currentDateAndTime = new Date();
+        currentPeriodDiv.innerHTML = "Current:  " + formatDateToClock(currentDateAndTime) + "<br><br>";
+
+      }
+
+      var date = new Date();
+      dateStartOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      var showTopEventsPP = false;
+
+        google.script.run.withSuccessHandler(onNextEventsSuccess)
+          .findEventsInCalendarForDay(dateStartOfDay  + '');
+          
+        google.script.run.withSuccessHandler(onTimeBlockSuccess)
+          .findTimeblocksInCalendarForDay(dateStartOfDay  + '');
+
+      onIntervalFire();
+      setInterval(onIntervalFire, 10000);
+
+  </script>
+  </body>
+</html>

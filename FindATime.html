@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      /* Make mobile half decent */
+      @media screen and (max-width: 70em) { 
+        * { 
+        font-size:4vw;
+        } 
+        button {
+          font-size: 3vw;
+        }
+        a {
+          font-size: 3vw;
+        }
+      }
+      div.calHeight {
+        height: 20px;
+        
+      }
+      div.calBorderTop {
+        border-top-style: solid;
+        border-width: thin;
+      }
+      div.calBorderInvisible {
+        border-top-style: solid;
+        border-width: thin;
+        border-color: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <button>Save</button>
+    <button>Cancel</button>
+    <br>
+    <h2 id="nameOfCal"></h2> 
+    <div id='calDays'>Loading Calendar...</div>
+    <br>
+    <div style="max-width: 50px; float: left;" id='hoursInDay'>Loading Hours...</div>
+    <div style="max-width: 200px; float: left; padding-left: 10px; padding-right: 10px;" id='eventBlocks'>Loading List...</div>
+    <div style="max-width: 400px; float: left; padding-left: 10px; padding-right: 10px;" id='nextEvents'>Loading List...</div>
+    <div style="display:None;" id='logging'>Loading logging</div>
+    <div style="display:None;" id='params'>Params...</div>
+    <script>
+    // TODO - dedupe this with the api code
+    function formatDateToPaddedHumanReadable(dateToFormat) {
+        var d = dateToFormat;
+        year = d.getFullYear();
+        month = ('' + (d.getMonth() + 1)).padStart(2, "0");
+        day = ('' + d.getDate()).padStart(2, "0");
+        hour = ('' + d.getHours()).padStart(2, "0");
+        minute = ('' + d.getMinutes()).padStart(2, "0");
+        var dateObj = {
+          year: year,
+          month: month,
+          day: day,
+          hour: hour,
+          minute: minute
+        };
+        return dateObj;
+    }
+    
+      function formatDateToClockPlusDay(dateToFormat) {
+        var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
+        return dateObj.day + ' '+ dateObj.hour + ":" + dateObj.minute;
+      }
+      
+      function formatDateToClock(dateToFormat) {
+        var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
+        return dateObj.hour + ":" + dateObj.minute;
+      }
+      
+      function formatDateForGoogleCalendar(dateToFormat) {
+        var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
+        return dateObj.year + '' + dateObj.month + '' + dateObj.day + 'T' + dateObj.hour + '' + dateObj.minute + '00';
+      }
+    
+      function eventsToHtml(nextEvents, startDate, width, showButtons) {
+     
+        var eventNames = '';   
+        // sorta assume these are sorted - we can sort if not
+        // each halfhour is a newline
+        // so 2x hour + min / 60 is the number of lines.
+        // we keep track of how many new lines there are...
+        var newLinesSoFar = 0;
+        var logging = "startDate:" + startDate;
+        var startDate = new Date(startDate);
+        var tenMinsSoFar = 0;
+        var priorEventEndHours = 0;
+        for (eventindex in nextEvents) {
+            var myEvent = nextEvents[eventindex];
+            var startTime = new Date(myEvent['startTime']);
+            var endTime = new Date(myEvent['endTime']);
+            var formattedStartTime = "0:00";
+            //var formattedEndTime = formatDateToSortable(endTime);
+            var numAdditionalNewLines = 0;
+            if (startTime.getDate() === startDate.getDate()) {
+              var numNewLinesForEvent = 6*(startTime.getHours() + (startTime.getMinutes() / 60));
+              numAdditionalNewLines = Math.max(numNewLinesForEvent - newLinesSoFar, 1);
+              formattedStartTime = formatDateToClock(startTime);
+            } else if (startTime.getDate() === startDate.getDate() - 1 && endTime.getDate() === startDate.getDate()){
+              numAdditionalNewLines =  6*(endTime.getHours() + (endTime.getMinutes() / 60));
+              formattedStartTime = formatDateToClockPlusDay(startTime);
+              priorEventEndHours = endTime.getHours() + endTime.getMinutes() / 60;
+            } else {
+              startTime = startDate;
+              endTime = startDate;
+            }
+            console.log("Event is " + myEvent['title'] + " from " + startTime + " to " + endTime);
+            for (pad = 0; pad < numAdditionalNewLines - 1; pad++){
+              var hoursSoFar = tenMinsSoFar / 6;
+              var justMinutes = hoursSoFar % 1;
+              var justHours = hoursSoFar - justMinutes;
+              console.log("Comparing hoursSoFar: " + hoursSoFar + " and priorEventEndHours " + priorEventEndHours);
+              if (showButtons === true  && priorEventEndHours < hoursSoFar) {
+              eventNames += '<div class="calHeight calBorderTop"><button onClick="openCreateGoogleCalendar('+ hoursSoFar +')">' + justHours + ":" + ((Math.round(justMinutes * 60))+'').padStart(2, "0") + "</button></div>";
+              } else {
+              eventNames += '<div class="calHeight calBorderInvisible"></div>';
+              }
+              tenMinsSoFar += 1;
+            }
+            var hoursSoFar = startTime.getHours() + startTime.getMinutes() / 60;
+            if (startTime.getDate() === startDate.getDate()) {
+              tenMinsSoFar = hoursSoFar * 6 + 1;
+            }
+            if (showButtons === true) {
+              var eventSummary = myEvent['title'].substring(0, width) + ' <button onClick="openCreateGoogleCalendar('+ hoursSoFar +')">' + formattedStartTime + '</button>';// + ' to ' + formattedEndTime;
+            } else {
+               var eventSummary = myEvent['title'].substring(0, width) + ' - ' + formattedStartTime;
+            }
+            eventNames += '<div class="calHeight calBorderTop">'+eventSummary+"</div>";
+            priorEventEndHours = endTime.getHours() + endTime.getMinutes() / 60;
+            newLinesSoFar += numAdditionalNewLines;
+        }
+        for (line = newLinesSoFar; line < 48; line++) {
+          var hoursSoFar = tenMinsSoFar / 6;
+          if (showButtons === true) {
+              eventNames += '<div class="calHeight calBorderTop"><button>'+hoursSoFar+"</button></div>";
+            } else {
+               eventNames += '<div class="calHeight calBorderInvisible"></div>';
+            }
+          
+          halfHoursSoFar += 1;
+        }
+        
+        document.getElementById("logging").innerHTML = logging;
+        
+        return eventNames;
+      }
+    
+      function onNextEventsSuccess(nextEventsArgs) {
+        var eventsDiv = document.getElementById("nextEvents");
+        eventsDiv.innerHTML = eventsToHtml(nextEventsArgs.events,nextEventsArgs.startDate, 25, true);
+      }
+      
+      function onTimeBlockSuccess(nextEventsArgs) {
+        var blocksDiv = document.getElementById("eventBlocks");
+        blocksDiv.innerHTML = eventsToHtml(nextEventsArgs.events,nextEventsArgs.startDate, 15, false);
+      }
+      
+      function createCalendar(selectedDateS) {
+      
+        var monthLookup = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", " Oct", "Nov", "Dec" ];
+      
+      
+        var selectedDate = new Date(selectedDateS);
+        var currentDay = selectedDate.getDate();
+        var currentMonth = selectedDate.getMonth();
+        var currentYear = selectedDate.getFullYear();
+        var startOfMonth = new Date(currentYear, currentMonth);
+        var startDow = startOfMonth.getDay();
+        var nextMonth = (currentMonth + 1);
+        var nextMonthYear = currentYear;
+        if (nextMonth > 11) {
+           nextMonthYear = currentYear + 1;
+           nextMonth = nextMonth % 12;
+        }
+        var prevMonth = currentMonth - 1;
+        var prevMonthYear = currentYear;
+        if (prevMonth < 0) {
+          prevMonth = 11;
+          prevMonthYear = currentYear - 1;
+        }
+        var nextMonthStart = new Date(nextMonthYear, nextMonth);
+        var lastDayInMonth = new Date(nextMonthStart - 1000*60*60*24);
+        
+        var dates = "";
+        dates += "<br>";
+        dates += "<span onclick='setDate( new Date("+ prevMonthYear +"," + prevMonth + "," + currentDay + "));'>prev </span>";
+        dates += "<span>"+ monthLookup[currentMonth] + " "+ currentYear +"</span>";
+        dates += "<span onclick='setDate( new Date("+ nextMonthYear +"," + nextMonth + "," + currentDay + "));'> next</span>"; 
+        dates += "<span onclick='setDate( new Date());'> today</span>";
+        dates += "<br>";
+        dates += "_s _m _t _w _t _f _s";
+        dates += "<br>";
+        dates +="<div id='calClickRow1'";
+        dates += "<br/>";
+        for (offset = 0; offset < startDow; offset ++) {
+          dates += "__ ";
+        }
+        var dow = startDow;
+        
+        for (day = 1; day <= lastDayInMonth.getDate(); day++) {
+          
+          if (day < 10) {
+             dates+= "_";
+          }
+          if (day === currentDay){
+            dates += "<span style='background:black; color:white;'>"+ day + " " +"</span>"
+          } else {
+            dates += "<span onclick='setDate( new Date("+ currentYear +"," + currentMonth + "," + day + "));'>" + day + " </span>"; 
+          }
+          dow += 1;
+          if (dow > 6) {
+             dates += "<br/>";
+             dow = 0;
+          }
+        }
+        dates += "</div>";
+        var calDiv = document.getElementById("calDays");
+        calDiv.innerHTML = dates;
+      }
+      function createHoursInDay() {
+      var hoursInDay = ''
+      for (hour = 0; hour < 24; hour++) {
+        for (minMult = 0; minMult < 6; minMult++) {
+          hoursInDay += '<div class="calHeight calBorderInvisible">'+ hour + ":" + ((minMult * 10)+'').padStart(2, "0") +'</div>';
+        
+        /*
+           if (minMult === 0) {
+              hoursInDay += '<div class="calHeight">';
+               minutes = "00";
+               hourD = hour;
+               if (hour < 10) {
+                 hourD = "_" + hour;
+               }
+               hoursInDay += hourD + ":" + minutes;
+           }
+           else if (minMult === 2) {
+               hoursInDay += '<div class="calHeight">';
+               minutes = 30;
+               hoursInDay += "--- -- ";
+           }
+           else {
+             hoursInDay += "</div>";
+           }*/
+        }
+      }
+      var hoursInDayDiv = document.getElementById("hoursInDay");
+      hoursInDayDiv.innerHTML = hoursInDay;
+      }
+      
+      function setDate(dateS) {
+         var date = new Date(dateS);
+         console.log('Date ' + date);
+         dateStartOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+         console.log('dateStartOfDay ' + dateStartOfDay);
+
+         createCalendar(dateStartOfDay + '');
+         
+         google.script.run.withSuccessHandler(onNextEventsSuccess)
+          .findEventsInCalendarForDay(dateStartOfDay  + '');
+          
+         google.script.run.withSuccessHandler(onTimeBlockSuccess)
+          .findTimeblocksInCalendarForDay(dateStartOfDay  + '');
+      }
+      
+      function openCreateGoogleCalendar(startTimeHours) {
+        var url = "https://www.google.com/calendar/render?";
+        url += "action=TEMPLATE";
+        url += "&text=" + encodeURIComponent(titlePP);
+        
+        console.log("titlePP:" + titlePP + " startTimeHours:" + startTimeHours + " description:" + descriptionPP);
+        
+        
+        var fractOfHour = startTimeHours % 1;
+        var hours = Math.round(startTimeHours - fractOfHour);
+        var minutes = fractOfHour * 60;
+        var startDate = new Date(dateStartOfDay.getFullYear(), dateStartOfDay.getMonth(), dateStartOfDay.getDate(), hours, minutes);
+        
+        console.log("Minutes: " + minutes);
+        
+        var startDateFormatted = formatDateForGoogleCalendar(startDate);
+        if (lengthMinsPP) {
+           var lengthMinutes = parseInt(lengthMinsPP);
+        }
+        else {
+           var lengthMinutes = 30;
+        }
+        
+        var datePlusLength = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), startDate.getHours(), startDate.getMinutes() + lengthMinutes);
+        var endDateFormatted = formatDateForGoogleCalendar(datePlusLength);
+        url += "&dates=" + encodeURIComponent(startDateFormatted + "/" + endDateFormatted);
+        url += "&location=" + encodeURIComponent(locationPP);
+        url += "&details=" + encodeURIComponent(descriptionPP);
+        url += "&add=" + encodeURIComponent("afarley@tripadvisor.com");
+        window.open(url);
+      }
+      
+      function processUrlParameters(location) {
+        var params = location.parameters; //new URLSearchParams(window.location.search);
+        var hoursInDayDiv = document.getElementById("params");
+        hoursInDayDiv.innerHTML = JSON.stringify(params); //JSON.stringify(params);
+        
+        /* example url */
+        /* https://www.google.com/calendar/render?
+        action=TEMPLATE&
+        text=Get%20sonia%20microwavable%20blanket%20for%20lowerback&
+        dates=20200928T073000/20200928T080000&
+        location=Home&
+        details=%0A%0AWorkitem%3A%0Ahttps%3A%2F%2Fdocs.google.com%2Fforms%2Fd%2Fe%2F1FAIpQLScFfscOqt8TnLc6PiLWc8qwTY03A33fQfabXFLQzdWbtjoAtg%2Fviewform%3Fedit2%3D2_ABaOnud6kPw7pguJ7d7C37dYz-lHGXeueJ6IlHzoqrRJDAFzz0p2hdnjHSImgbcKIkgN5dk%0A%0A%5BWorkitemEventGen%5D98d002ff-0f0c-462b-a122-9e67b81afe89%5BWorkitemEventGen%5DFALSE */
+        
+        titlePP = params["text"];
+        startDateTimePP = params["startDate"];
+        lengthMinsPP = params["lengthMins"];
+        locationPP = params["location"];
+        descriptionPP = params["details"];
+        
+        var titleDiv = document.getElementById("nameOfCal");
+        titleDiv.innerHTML = titlePP;
+        
+        if (startDateTimePP) {
+          var startDate = new Date(startDateTimePP);
+        } else {
+          var startDate = new Date();
+        }
+        setDate(startDate);
+      }
+      
+      var dateStartOfDay = new Date();
+      var titlePP = "Loading..";
+      var startDateTimePP = "Loading...";
+      var locationPP = "Loading...";
+      var lengthMinsPP = "Loading...";
+      var descriptionPP = "Loading...";
+      
+      var titleDiv = document.getElementById("nameOfCal");
+      titleDiv.innerHTML = titlePP;
+      
+      createHoursInDay();
+      google.script.url.getLocation(processUrlParameters);
+      
+    </script>
+  </body>
+</html>
+
+
