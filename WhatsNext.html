@@ -7,6 +7,7 @@
       @media screen and (max-width: 70em) { 
         * { 
         font-size:4vw;
+        max-width:100%;
         } 
         button {
           font-size: 3vw;
@@ -14,12 +15,25 @@
         a {
           font-size: 3vw;
         }
+        p {
+          max-height: 9vw;
       }
+      }
+      
       td {
          border-width: 1px;
          border-style: solid;
          padding: 10px;
-}
+      }
+      p {
+        overflow: clip;
+        overflow: hidden;
+        word-wrap:break-word;
+        max-height: 2vw;
+      }
+      .currentEvent {
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -77,13 +91,22 @@
         return dateObj.day + ' '+ dateObj.hour + ":" + dateObj.minute;
       }
       
+      function formatDateToClockPlusFullDate(dateToFormat) {
+        var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
+        return dateObj.month + '/'+ dateObj.day + ' '+ dateObj.hour + ":" + dateObj.minute;
+      }  
+
       function formatDateToClock(dateToFormat) {
         var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
         return dateObj.hour + ":" + dateObj.minute;
       }
  
       function openEditWorkitem(editLink, newStatus) {
-        window.open(editLink + "&entry.756313724="+ newStatus);
+        if (newStatus && newStatus.trim() !== '') {
+          window.open(editLink + "&entry.756313724="+ newStatus);
+        } else {
+          window.open(editLink);
+        }
       }
 
       function reloadWithFullDay() {
@@ -98,11 +121,19 @@
           .findEventsInCalendarForDay(dateStartOfDay  + '');
       }
 
+      function expandParagraph(elmnt) {
+        if(elmnt.style.maxHeight === "100vw") {
+          elmnt.style.maxHeight = "9vw"
+        } else {
+          elmnt.style.maxHeight = "100vw";
+        }
+      }
 
       function filterEventsToGuids(nextEvents) {
         currentDateAndTime = new Date();
         currentHours = currentDateAndTime.getHours() + currentDateAndTime.getMinutes() / 60;
         currentHours = currentHours - .75; // helpful to see a little bit back
+        var tomorrow = new Date(currentDateAndTime.valueOf() + 1000*3600 *24);
         var eventCount = 0;
         var uuidsForEvents = {};
         for (const [index, myEvent] of Object.entries(nextEvents)) {
@@ -114,11 +145,12 @@
             if (showAllEventsPP === true || 
                 startHours < currentHours && endHours > currentHours || // current event
                 startHours > currentHours && startTime.getDate() === currentDateAndTime.getDate() || // next event
+                startTime.getDate() === tomorrow.getDate() || // tomorrow event
                 endHours > currentHours && startTime.getDate() !== currentDateAndTime.getDate() ) { // past event
                 uuidsForEvents[uuid] = "";
                 eventCount = eventCount + 1;
              
-            if (eventCount > 5 && showAllEventsPP === false) {
+            if (eventCount > 8 && showAllEventsPP === false) {
               break;
             }
             }
@@ -128,7 +160,7 @@
       function workItemsToHtml(workitemsByUuid, nextEvents) {
         currentDateAndTime = new Date();
         currentHours = currentDateAndTime.getHours() + currentDateAndTime.getMinutes() / 60;
-        currentHours = currentHours - .75; // helpful to see a little bit back
+        lookbackHours = currentHours - .75; // helpful to see a little bit back
         var htmlOutput = "";
         var eventCount = 0;
 
@@ -143,44 +175,53 @@
           console.log('currentHours: ' + currentHours + ' startHours ' + startHours + ' endHours ' + endHours)
 
           if (showAllEventsPP === true || 
-            startHours < currentHours && endHours > currentHours || // current event
-            startHours > currentHours && startTime.getDate() === currentDateAndTime.getDate() || // next event
-            endHours > currentHours && startTime.getDate() !== currentDateAndTime.getDate() ) { // past event
+            startHours < lookbackHours && endHours > lookbackHours || // current event
+            startHours > lookbackHours && startTime.getDate() === currentDateAndTime.getDate() || // next event
+            endHours > lookbackHours && startTime.getDate() !== currentDateAndTime.getDate() ) { // past event
+
+            var isCurrentEvent = startHours < currentHours && endHours > currentHours;
 
             console.log('showing event...');
 
             var uuid = myEvent["uuid"];
             var description = myEvent["description"];
             var workItem = workitemsByUuid[uuid];
-          
-	        htmlOutput += "<div>" +
-          "&nbsp;<a href='" + myEvent['editLink'] + "'> " + formatDateToClock(startTime) + " - " + formatDateToClock(endTime) +
+
+            if (isCurrentEvent) {
+	          htmlOutput += "<div class='currentEvent'>";
+            } else {
+              htmlOutput += "<div>";
+            }
+
+              htmlOutput +="&nbsp;<a href='" + myEvent['editLink'] + "'> " + formatDateToClock(startTime) + " - " + formatDateToClock(endTime) +
               "</a> " + "</td>" + "<span>" + myEvent["title"] +"<span>";
     if (workItem) {
       var workItemEditLink = workItem['editLink'];
-          htmlOutput += "<div>&nbsp;" + workItem['LOE'] + " of " + workItem['originalLOE'] + " hours left. " + " ";
-      if (workItem['status'] === "N") {
-      htmlOutput += '<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'In Progress\')">mark in progress</button>';
-      } else if (workItem['status'] === "In Progress"){
-      htmlOutput += 'In Progress<button onClick="openEditWorkitem(\''+workItemEditLink + '\', \'N\')">stop progress</button>';
-      }
-      if (workItem['status'] === "Y") {
-      htmlOutput += 'Done<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'In Progress\')">mark as not done</button>';
-      } else {
-      htmlOutput += '<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'Y\')">mark complete</button>';
-      }
-          htmlOutput += "<br><br></div>";
-    /*
-    status = workItem['status'];
-    loe = workItem['LOE'];
-    originalLOE = workItem['originalLOE'];
-    milestoneName = workItem['milestoneName'];
-    statusInProgress = "<btn>mark in progress</btn>";
-    statusComplete = "<btn>mark complete</btn>";*/
-        }
-    eventCount = eventCount + 1;
-        htmlOutput += "</div>";
-    if (eventCount > 5 && showAllEventsPP === false) {
+              htmlOutput += '&nbsp;<a target="_blank" href="' + workItem["externalLink"] + '"> ' + workItem["externalLinkAnchor"] + "</a> " + "</td>" ;
+      htmlOutput += "<div>&nbsp;" + workItem['LOE'] + " of " + workItem['originalLOE'] + " hours left. " + " ";
+  if (workItem['status'] === "N") {
+  htmlOutput += '<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'In Progress\')">mark in progress</button>';
+  } else if (workItem['status'] === "In Progress"){
+  htmlOutput += 'In Progress<button onClick="openEditWorkitem(\''+workItemEditLink + '\', \'N\')">stop progress</button>';
+  }
+  if (workItem['status'] === "Y") {
+  htmlOutput += 'Done<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'In Progress\')">mark as not done</button>';
+  } else {
+  htmlOutput += '<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'Y\')">mark complete</button>';
+  }
+              htmlOutput += '<p onclick="expandParagraph(this)"> -- Notes: <button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'\')">edit</button> ' + workItem["comment"] + "</p>";
+      htmlOutput += "</div>";
+/*
+status = workItem['status'];
+loe = workItem['LOE'];
+originalLOE = workItem['originalLOE'];
+milestoneName = workItem['milestoneName'];
+statusInProgress = "<btn>mark in progress</btn>";
+statusComplete = "<btn>mark complete</btn>";*/
+    }
+eventCount = eventCount + 1;
+    htmlOutput += "</div>";
+    if (eventCount > 8 && showAllEventsPP === false) {
           break;
         }
       }
@@ -233,8 +274,7 @@
       function onIntervalFire() {
         var currentPeriodDiv = document.getElementById("currentPeriod");
         var currentDateAndTime = new Date();
-        currentPeriodDiv.innerHTML = "Current:  " + formatDateToClock(currentDateAndTime) + "<br><br>";
-
+        currentPeriodDiv.innerHTML = "Current:  " + formatDateToClockPlusFullDate(currentDateAndTime) + "<br><br>";
       }
 
       var date = new Date();

@@ -59,4 +59,3 @@ function findTimeblocksInCalendarForDay(day) {
 function testFindTimeblocksInCalendarForDay() {
   findTimeblocksInCalendarForDay('09 19 2020 00:00:00 GMT-0400');
 }
-

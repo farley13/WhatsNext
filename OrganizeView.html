@@ -82,6 +82,11 @@
         var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
         return dateObj.year + "-" + dateObj.month + '-' + dateObj.day + ' '+ dateObj.hour + ":" + dateObj.minute;
       }
+
+      function formatDateToFullDay(dateToFormat) {
+        var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
+        return dateObj.year + "-" + dateObj.month + '-' + dateObj.day;
+      }
       
       function formatDateToClock(dateToFormat) {
         var dateObj = formatDateToPaddedHumanReadable(dateToFormat);
@@ -89,7 +94,11 @@
       }
  
       function openEditWorkitem(editLink, newStatus) {
-        window.open(editLink + "&entry.756313724="+ newStatus);
+        if (newStatus && newStatus.trim() !== '') {
+          window.open(editLink + "&entry.756313724="+ newStatus);
+        } else {
+          window.open(editLink);
+        }
       }
 
       function expandParagraph(elmnt) {
@@ -278,19 +287,24 @@
             restName = workItem["name"].substr(boldLength, workItem["name"].length);
           }
           htmlOutput += "<span>" + "<strong>" + boldName + "</strong>" + restName +"</span>";
-          htmlOutput += '&nbsp;<a target="_blank" href="' + workItem["externalLink"] + '"> ' + workItem["externalLinkAnchor"] + "</a> " + "</td>" ;
-          htmlOutput += "<span>#" + Math.round(parseFloat(workItem["order"])) +" - </span>";
-          var dueDate = "-";
+          htmlOutput += "</td>" ;
+          costOutput = workItem["cost"].replaceAll(/[ ]*\(.*/g,''); // Remove price range and leave just $$$
+          htmlOutput += "<span> - " + workItem["importance"] + " - " + costOutput + " - </span>";
+          var dueDate = "";
+          var dueDateLabel = "";
           if (new Date(workItem["dueDate"]).getFullYear() > -2000) {
-            dueDate = formatDateToClockPlusFullDay(new Date(workItem["dueDate"]));
+            dueDate = formatDateToFullDay(new Date(workItem["dueDate"]));
+            dueDateLabel = " - Due: "
           }
           var nextScheduledDate = "-";
+          var nextScheduledDateLabel = " Unscheduled "
           if (new Date(workItem["nextScheduledTime"]).getFullYear() > -2000) {
             nextScheduledDate = formatDateToClockPlusFullDay(new Date(workItem["nextScheduledTime"]));
+            nextScheduledDateLabel = " - Scheduled: "
           }
 
-          htmlOutput += "<div>-- " + workItem["domain"] + " - Due: " + dueDate +  " Scheduled:  " + '<a target="_blank" href="' + workItem["editEventLink"] + '">' + nextScheduledDate + "</a> -- " 
-          + '<a target="_blank" href="' + workItem["scheduleNewLink"] + '"> Schedule New</a>'
+          htmlOutput += "<div>-- " + workItem["domain"] + dueDateLabel + dueDate + nextScheduledDateLabel + '<a target="_blank" href="' + workItem["editEventLink"] + '">' + nextScheduledDate + "</a> -- " 
+          + '<a target="_blank" href="' + workItem["scheduleNewLink"] + '"> Schedule Again</a>'
                       + "</div>"
             var workItemEditLink = workItem['editLink'];
             htmlOutput += "<div>-- &nbsp;" + workItem['LOE'] + " of " + workItem['originalLOE'] + " hours left. " + " ";
@@ -303,6 +317,9 @@
               htmlOutput += '(D))<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'In Progress\')">mark as not done</button>';
             } else {
               htmlOutput += '<button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'Y\')">mark complete</button>';
+            }
+            if (workItem["externalLink"]) {
+              htmlOutput += '<div>-- &nbsp;<a target="_blank" href="' + workItem["externalLink"] + '"> ' + workItem["externalLinkAnchor"] + "</a> </div> " ;
             }
             htmlOutput += '<p onclick="expandParagraph(this)"> -- Notes: <button onClick="openEditWorkitem(\'' + workItemEditLink + '\', \'\')">edit</button> ' + workItem["comment"] + "</p>";
             htmlOutput += "<br></div>";

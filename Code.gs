@@ -351,6 +351,8 @@ function __getWorkitemsFromUuids(guids, includeAll) {
   var scheduleNewLinkColumnIndex = header.indexOf("Custom Scheduler");
   var dueDateColumnIndex = header.indexOf("Due Date");
   var categoriesColumnIndex = header.indexOf("Categories");
+  var importanceColumnIndex = header.indexOf("Importance");
+  var costColumnIndex = header.indexOf("Cost");
 
   rowsByUuid = {};
 
@@ -395,6 +397,8 @@ function __getWorkitemsFromUuids(guids, includeAll) {
     rowCopy["scheduleNewLink"] = data[row][scheduleNewLinkColumnIndex] + "";
     rowCopy["dueDate"] = data[row][dueDateColumnIndex] + "";
     rowCopy["categories"] = data[row][categoriesColumnIndex] + "";
+    rowCopy["importance"] = data[row][importanceColumnIndex] + "";
+    rowCopy["cost"] = data[row][costColumnIndex] + "";
 
     rowsByUuid[uuid] = rowCopy;
   }
