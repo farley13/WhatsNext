@@ -1,4 +1,6 @@
-const sum = (x:Int,y:Int) => {
+
+
+const sum = (x:number,y:number) => {
   return x+ y;
 }
 

@@ -20,13 +20,14 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "ts jest init": "ts-jest config:init",
     "eject": "npx eject"
   },
   "devDependencies": {
     "@types/react": "17.x.x",
     "@types/react-dom": "17.x.x",
+    "@types/jest": "27.x.x",
     "typescript": "4.4.2"
   }
 }
