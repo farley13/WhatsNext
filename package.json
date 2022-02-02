@@ -1,24 +1,32 @@
 {
-  "name": "react-typescript",
   "version": "1.0.0",
-  "description": "React and TypeScript example starter project",
-  "keywords": ["typescript", "react", "starter"],
-  "main": "src/index.tsx",
   "dependencies": {
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
-    "react-scripts": "4.0.3"
-  },
-  "devDependencies": {
-    "@types/react": "17.0.20",
-    "@types/react-dom": "17.0.9",
-    "typescript": "4.4.2"
+    "@babel/core": "7.x.x",
+    "@babel/preset-env": "7.x.x",
+    "@babel/preset-react": "7.x.x",
+    "@babel/preset-typescript": "7.x.x",
+    "babel-loader": "8.x.x",
+    "css-loader": "2.1.x",
+    "express": "4.16.x",
+    "file-loader": "^4.0.0",
+    "react": "17.x.x",
+    "react-dom": "17.x.x",
+    "style-loader": "0.x.x",
+    "url-loader": "^2.0.0",
+    "webpack": "4.x.x",
+    "webpack-dev-middleware": "3.7.x",
+    "jest": "27.x.x",
+    "ts-jest": "27.x.x"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "ts jest init": "ts-jest config:init",
+    "eject": "npx eject"
   },
-  "browserslist": [">0.2%", "not dead", "not ie <= 11", "not op_mini all"]
+  "devDependencies": {
+    "@types/react": "17.x.x",
+    "@types/react-dom": "17.x.x",
+    "typescript": "4.4.2"
+  }
 }
