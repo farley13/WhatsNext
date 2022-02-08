@@ -1,31 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './app.css';
-import logo from '../public/logo.png'; 
+import {ErrorBoundary} from './ErrorBoundary';
+//import logo from '../public/logo.png'; 
+import {SendToDropbox} from "./oauth/dropboxauthrequest";
 
 class App extends React.Component {	
   render() {
-    interface User {
-  id: number
-  firstName: string
-  lastName: string
-  role: string
-}
-    
-    const user:User = {
-  firstName: "Angela",
-  lastName: "Davis",
-  role: "Professor",
-}
- 
-console.log(user.name)
-    let b:Intbb = "thing"
     return (
       <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+    //    <img src='logo' className="App-logo" alt="logo" />
         <p>
-          No! need to Edit <code>src/app.jsx</code> and tap.... on the play button.
+          No! need to Edit <code>src/app.tsx</code> and tap.... on the play button.
         </p>
         <a
           className="App-link"
@@ -36,9 +23,12 @@ console.log(user.name)
           Learn React
         </a>
       </header>
+     <SendToDropbox/>
     </div>
     )
   }
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<ErrorBoundary><h1>Hello</h1><App/></ErrorBoundary>, document.getElementById('root'));
+
+export default App;

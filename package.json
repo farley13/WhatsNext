@@ -16,7 +16,9 @@
     "webpack": "4.x.x",
     "webpack-dev-middleware": "3.7.x",
     "jest": "27.x.x",
-    "ts-jest": "27.x.x"
+    "ts-jest": "27.x.x",
+    "react-oauth2-auth-code-flow": "1.x.x",
+    "client-oauth2": "4.x.x"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
