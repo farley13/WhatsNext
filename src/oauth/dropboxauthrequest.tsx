@@ -5,14 +5,14 @@ import ClientOAuth2 from "client-oauth2";
 const apiRoot = "definitelyWontWork";
 
 const oauthClient = new ClientOAuth2({
-  clientId: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
+  clientId: "thing1", //process.env.CLIENT_ID,
+  clientSecret: "thing2", //process.env.CLIENT_SECRET,
   accessTokenUri: `${apiRoot}/oauth/token/`,
   authorizationUri: "https://www.dropbox.com/oauth2/authorize",
   redirectUri: "https://www.yourapp.com/auth/dropbox",
   scopes: ["read"],
 });
-
+// todo - the same for https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow
 class SendToDropbox extends Component<any> {
   render() {
     return (
