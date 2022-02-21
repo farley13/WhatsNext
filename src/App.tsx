@@ -5,7 +5,7 @@ import {ErrorBoundary} from './ErrorBoundary';
 //import logo from '../public/logo.png'; 
 import {SendToDropbox} from "./oauth/dropboxauthrequest";
 import GapiContextProvider from "./oauth/gapicontextprovider"
-import GapiLoginButton from "./oauth/gapiloginbutton"
+import GapiLoginButton2 from "./oauth/gapiloginbutton2"
 
 class App extends React.Component {	
   render() {
@@ -27,7 +27,7 @@ class App extends React.Component {
       </header>
      <SendToDropbox/>
      <GapiContextProvider>
-       <GapiLoginButton>Login to Google</GapiLoginButton>
+   <GapiLoginButton2>Login to Google</GapiLoginButton2>
      </GapiContextProvider> 
     </div>
     )
