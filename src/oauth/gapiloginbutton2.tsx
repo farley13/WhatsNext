@@ -1,5 +1,7 @@
 // SignIn.jsx
 import React from 'react';
+// This library is terrible.... stop using it
+// maybe try https://github.com/partnerhero/gapi-script ?
 import { useGoogleAuth, useGoogleUser } from 'react-gapi-auth2';
 
 const GApiLoginButton2 = ({ children }) => {
@@ -10,7 +12,7 @@ const GApiLoginButton2 = ({ children }) => {
   // https://developers.google.com/identity/sign-in/web/reference#users
   const { currentUser } = useGoogleUser();
 
-  if (googleAuth.isSignedIn) {
+  if (!!googleAuth && googleAuth.isSignedIn) {
     return (
       <>
         <p>Welcome user {currentUser.getBasicProfile().getName()}</p>
@@ -18,11 +20,17 @@ const GApiLoginButton2 = ({ children }) => {
       </>
     )
   }
-  
+  if (!!googleAuth) {
   return (
     <>
       <p>Click here to sign in:</p>
       <button onClick={() => googleAuth.signIn()}>Sign In</button>
+    </>
+  )
+}
+  return (
+    <>
+      <p>We failed to load google OAUTH2. Please try later.</p>
     </>
   )
 };

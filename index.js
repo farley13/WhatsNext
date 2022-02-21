@@ -5,7 +5,7 @@ const semver = require('semver');
 
 // Setup
 const app = express();
-const port = process.env['REACT_APP_PORT'];
+const port = process.env['REACT_APP_PORT'] || 3001;
 const nodeVersion = process.version;
 const config = require('./webpack.config.js');
 const compiler = webpack(config);
@@ -19,7 +19,7 @@ const middleware = webpackMiddleware(compiler, {
   }
 });
 if(!semver.satisfies(nodeVersion, "12.x")) {
-  console.error("Need to use node version 12.x for compatability with play.js. Use nvm to pin an appropriate version.");
+  console.error("Error: Use node version 12.x for compatability with play.js. Use nvm to pin an appropriate version.");
 }
 app.use(middleware);
 app.get('/', (req, res) => {

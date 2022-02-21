@@ -5,9 +5,16 @@ import {ErrorBoundary} from './ErrorBoundary';
 //import logo from '../public/logo.png'; 
 import {SendToDropbox} from "./oauth/dropboxauthrequest";
 import GapiContextProvider from "./oauth/gapicontextprovider"
-import GapiLoginButton2 from "./oauth/gapiloginbutton2"
+import GApiLoginButton3 from "./oauth/gapiloginbutton3"
 
 class App extends React.Component {	
+
+  handleClientLoad() {
+	console.log("Loading gapi via script tag");
+        // gapi.load('client:auth2', initClient);
+  }
+
+
   render() {
     return (
       <div className="App">
@@ -27,13 +34,13 @@ class App extends React.Component {
       </header>
      <SendToDropbox/>
      <GapiContextProvider>
-   <GapiLoginButton2>Login to Google</GapiLoginButton2>
+       <GApiLoginButton3/>
      </GapiContextProvider> 
     </div>
     )
   }
 }
 
-ReactDOM.render(<ErrorBoundary><h1>Hello</h1><App/></ErrorBoundary>, document.getElementById('root'));
+ReactDOM.render(<React.StrictMode><ErrorBoundary><h1>Hello</h1><App/></ErrorBoundary></React.StrictMode>, document.getElementById('root'));
 
 export default App;
