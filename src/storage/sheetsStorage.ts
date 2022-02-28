@@ -1,4 +1,6 @@
 
+// Use https://dev.to/nicomartin/the-right-way-to-fetch-data-with-react-hooks-48gc as the example...
+import apiStates from './apiStates';
 
 export default function listMajors() {
 	var prodSheetId = "14sUfq5wu3IjBtiLOjBA_AnoThIVLAEs0DLwj_tLKzxI";
