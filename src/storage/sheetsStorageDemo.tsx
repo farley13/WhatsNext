@@ -4,7 +4,7 @@ import React from 'react';
 // maybe try https://github.com/partnerhero/gapi-script ?
 import { useGoogleAuth, useGoogleUser } from 'react-gapi-auth2';
 
-import listMajors from "./sheetsStorage"
+import { getSheetsData, setPartData } from "./sheetsStorage"
 
 
 const SheetsStorageDemo = ({ children }) => {
@@ -14,13 +14,17 @@ const SheetsStorageDemo = ({ children }) => {
   // The `GoogleUser` object described here:
   // https://developers.google.com/identity/sign-in/web/reference#users
   // const { currentUser } = useGoogleUser();
+  var isApiAvailable = !!googleAuth && !!window.gapi && !!window.gapi.client && !!window.gapi.client.sheets
+  console.log("Calling Get Sheets with api:" + isApiAvailable)
+  const { status, error, data } = getSheetsData({apiAvailable: isApiAvailable});
 
   if (!!googleAuth && googleAuth.isSignedIn) {
     return (
       <>
         <p>You seem to be signed in</p>
         <button onClick={() => googleAuth.signOut()}>Sign Out</button>
-	<div>{listMajors()}</div>
+	<div>{status}</div>
+	<div>{data}</div>
       </>
     )
   }
