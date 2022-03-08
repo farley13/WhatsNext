@@ -47,8 +47,7 @@ export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
 function listMajors() {
 
     var promisedResult = const myPromise = new Promise((resolve, reject) => {
-      const header =   var nameColumnIndex = header.indexOf("Name");
-  var createdColumnIndex = header.indexOf("Created");
+      const header = ["name", createdTimelumnIndex = header.indexOf("Created");
   var timestampColumnIndex = header.indexOf("Updated");
   var editColumnIndex = header.indexOf("Edit Link");
   var commentColumnIndex = header.indexOf("Comment");
