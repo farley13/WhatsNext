@@ -33,10 +33,10 @@ export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
           result
         });
       })
-      .catch(() => {
+      .catch((error) => {
        setPartData({
           state: apiStates.ERROR,
-          error: 'fetch failed'
+          error: 'fetch failed: ' + error
         });
       });
  }, [apiAvailableInput]);
@@ -44,10 +44,23 @@ export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
   return data;
 };
 
+function generateData() {
+  return [[
+    "Get garden bench", 1647315976, 1647315999,"Edit Link", "", "Ready", 40, 40, 0,"","","","ABC123",34684, "Gardening", "https://www.gardening.com", "", "", 0,"Fast, Expensive", "Critical","$$ (100-300)"
+  ],
+  [
+    "Cleanup Home", 1647315976, 1647315999,"Edit Link", "", "In Progress", 2, 3, 0,"","","","ABC124",34684, "Home", "https://www.gardening.com", "", "", 0,"Fast", "Critical",""
+  ]
+  ]
+}
+
 function listMajors() {
 
-    var promisedResult = const myPromise = new Promise((resolve, reject) => {
-      const header = ["name", createdTimelumnIndex = header.indexOf("Created");
+    var promisedResult = new Promise((resolve, reject) => {
+      const header = ["Name","Created","Updated","Edit Link", "Comment", "Done", "Time Remaining [Hours]","Original LOE", "Completed Date","Milestone","Edit Event","Edit Event Link","UUID","Order", "Domain", "Ext Link", "Links", "Custom Scheduler", "Due Date","Categories", "Importance","Cost"];
+  
+  var nameColumnIndex = header.indexOf("Name")
+  var createdTimeColumnIndex = header.indexOf("Created");
   var timestampColumnIndex = header.indexOf("Updated");
   var editColumnIndex = header.indexOf("Edit Link");
   var commentColumnIndex = header.indexOf("Comment");
@@ -68,24 +81,16 @@ function listMajors() {
   var categoriesColumnIndex = header.indexOf("Categories");
   var importanceColumnIndex = header.indexOf("Importance");
   var costColumnIndex = header.indexOf("Cost");
-
-      const rows = header.append(data);
+      const data = generateData();
+      const rows = [header];
+      [].push.apply(rows,data);
       const range = { values: rows };
-      resolve('foo');
+      const result = { result: range };
+      resolve(result);
 }).then(function(response) {
-	  var result = "";
-          var range = response.result;
-          if (range.values.length > 0) {
-            result += 'Name, Major: ||';
-            for (var i = 0; i < range.values.length; i++) {
-              var row = range.values[i];
-              // Print columns A and E, which correspond to indices 0 and 4.
-              result += (row[0] + ', ' + row[4]) + "||";
-            }
-          } else {
-            result += 'No data found.';
-          }
-	  return result;
+          var result = response;
+           
+	   return {response: result};
         }, function(response) {
           return 'Error: ' + response.result.error.message;
         });
