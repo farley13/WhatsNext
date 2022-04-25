@@ -34,10 +34,7 @@ class App extends React.Component {
         </a>
       </header>
      <SendToDropbox/>
-     <GapiContextProvider>
-       <GApiLoginButton/>
-       <TestStorageDemo/>
-     </GapiContextProvider> 
+     <TestStorageDemo/>
     </div>
     )
   }

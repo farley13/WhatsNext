@@ -9,9 +9,10 @@ const TestStorageDemo = ({ children }) => {
     const { status, error, result } = getSheetsData({apiAvailable: true});
     
   return (
-    <>
-      <p>We got some hot data :{JSON.stringify(result, null, 2)} {status} {error}</p>
-    </>
+/*    <>
+      <p>We got some hot data:{JSON.stringify(result, null, 2)} {status} {error}</p>
+    </>*/
+<div/>
   )
 };
 
