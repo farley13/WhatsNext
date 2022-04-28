@@ -26,7 +26,7 @@ export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
     } else {
        console.log("gapi now loaded.")
     }
-    _getDataInternal(true)
+    getData(true)
       .then((result) => {
         setPartData({
           state: apiStates.SUCCESS,
@@ -36,13 +36,33 @@ export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
       .catch((error) => {
        setPartData({
           state: apiStates.ERROR,
-          error: 'fetch failed: ' + error
+          error: 'fetch failed: ' + error + error.stack
         });
       });
  }, [apiAvailableInput]);
 
   return data;
 };
+
+function getData(includeDone: boolean):DataEntry[] {
+    var promisedResult = _getDataInternal(includeDone);
+
+    return promisedResult.then(function(response) {
+	console.log(JSON.stringify(response, null,2));
+	//const rows = [["a","b"],[1,2],[3,5]]; // response.result
+	const rows = response.result.values; 
+	const header = rows[0];
+	const mapper = new Mapper(header, [], []);
+	const dataEntries = [];
+	for (let rowNum = 1; rowNum < rows.length; rowNum++) {
+	    const newEntry = new TestRowDataEntry(mapper, rows[rowNum]);
+	    dataEntries.push(newEntry);
+	}
+	return dataEntries;
+        }, function(response) {
+          return 'Error: ' + response.result.error.message;
+        });
+}
 
 function generateData() {
   return [[
@@ -71,12 +91,13 @@ function _getDataInternal(includeDone: boolean):string[][] {
 
 class Mapper {
     // enum values are stored as enumTypeName;;value1;value2;value3 etc...
-  constructor(header: string[], headerTypes: string[], headerEnums: string[]) {
+  constructor(headerIn: string[], headerTypes: string[], headerEnums: string[]) {
       
-      this.header = header;
-      this.headerTypeMap = createTypeMap(headerTypes);
-      this.headerEnumMap = createEnumMap(headerEnums);
-      this.nameColumnIndex = header.indexOf("Name")
+      console.log("headerIn: " + JSON.stringify(headerIn, null, 2));
+      this.header = headerIn;
+      this.headerTypeMap = this.createTypeMap(headerTypes);
+      this.headerEnumMap = this.createEnumMap(headerEnums);
+/*      this.nameColumnIndex = header.indexOf("Name")
       this.createdTimeColumnIndex = header.indexOf("Created");
       this.timestampColumnIndex = header.indexOf("Updated");
       this.editColumnIndex = header.indexOf("Edit Link");
@@ -86,12 +107,12 @@ class Mapper {
       this.scheduleNewLinkColumnIndex = header.indexOf("Custom Scheduler");
       this.UuidColumnIndex = header.indexOf("UUID");
       this.OrderColumnIndex = header.indexOf("Order");
-
+*/
       this.columnNameLookup = {};
-      header.forEach((colName,index) => this.columnNameLookup[colName] = index);
+      this.header.forEach((colName,index) => this.columnNameLookup[colName] = index);
 
       // UDFs - my own - but could be anyone\'s
-      this.doneColumnIndex = header.indexOf("Done");
+  /*    this.doneColumnIndex = header.indexOf("Done");
       this.loeColumnIndex = header.indexOf("Time Remaining [Hours]");
       this.originalLoeColumnIndex = header.indexOf("Original LOE");
       this.milestoneColumnIndex = header.indexOf("Milestone");
@@ -102,21 +123,25 @@ class Mapper {
       this.importanceColumnIndex = header.indexOf("Importance");
       this.externalLinkAnchorColumnIndex = header.indexOf("Ext Link");
       this.externalLinkColumnIndex = header.indexOf("Links");
-      this.costColumnIndex = header.indexOf("Cost");
+      this.costColumnIndex = header.indexOf("Cost");*/
   }
 
-  createTypeMap(header: string[], types: string[]) {
-      typeMap = {};
-      types.foreach((typeName,index) => typeMap[header[index]] = typeName)
+  getHeader(): string[] {
+      return this.header;
+  }
+
+  createTypeMap(types: string[]) {
+      this.typeMap = {};
+      types.forEach((typeName,index) => this.typeMap[this.header[index]] = typeName)
   }
 
   createEnumMap(enums: string[]) {
-      const enumMap ={};
-      types.foreach((enumValue,index) => { 
+      this.enumMap ={};
+      enums.forEach((enumValue,index) => { 
 	  enumValues = enumValue.split(";");
 	  const enumName = enumValues[0];
 	  enumValues.shift();
-	  enumMap[enumName] = enumValues;
+	  this.enumMap[enumName] = enumValues;
       });
   }
 }
@@ -128,11 +153,11 @@ class TestRowDataEntry implements DataEntry {
   }
 
    columnNames(): string[] {
-       return mapper.header;
+       return mapper.getHeader();
    }
 
    get(column: string): any {
-       const type = getType(column);
+       // const type = getType(column);
        return row[mapper.columnNameLookup[column]];
    }
    
@@ -166,14 +191,3 @@ class TestRowDataEntry implements DataEntry {
    }
 }
 
-function getData(includeDone: boolean):DataEntry[] {
-    var promisedResult = _getDataInternal(includeDone);
-
-    return promisedResult.then(function(response) {
-	const rows = response.result;
-	const header = rows(0);
-	
-        }, function(response) {
-          return 'Error: ' + response.result.error.message;
-        });
-}
