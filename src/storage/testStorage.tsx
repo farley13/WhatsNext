@@ -54,46 +54,126 @@ function generateData() {
   ]
 }
 
-function listMajors() {
+function _getDataInternal(includeDone: boolean):string[][] {
 
     var promisedResult = new Promise((resolve, reject) => {
       const header = ["Name","Created","Updated","Edit Link", "Comment", "Done", "Time Remaining [Hours]","Original LOE", "Completed Date","Milestone","Edit Event","Edit Event Link","UUID","Order", "Domain", "Ext Link", "Links", "Custom Scheduler", "Due Date","Categories", "Importance","Cost"];
   
-  var nameColumnIndex = header.indexOf("Name")
-  var createdTimeColumnIndex = header.indexOf("Created");
-  var timestampColumnIndex = header.indexOf("Updated");
-  var editColumnIndex = header.indexOf("Edit Link");
-  var commentColumnIndex = header.indexOf("Comment");
-  var doneColumnIndex = header.indexOf("Done");
-  var loeColumnIndex = header.indexOf("Time Remaining [Hours]");
-  var originalLoeColumnIndex = header.indexOf("Original LOE");
-  var completionDateColumnIndex = header.indexOf("Completed Date");
-  var milestoneColumnIndex = header.indexOf("Milestone");
-  var nextScheduledEventColumnIndex = header.indexOf("Edit Event");
-  var nextScheduledEventLinkColumnIndex = header.indexOf("Edit Event Link");
-  var UuidColumnIndex = header.indexOf("UUID");
-  var OrderColumnIndex = header.indexOf("Order");
-  var DomainColumnIndex = header.indexOf("Domain");
-  var externalLinkAnchorColumnIndex = header.indexOf("Ext Link");
-  var externalLinkColumnIndex = header.indexOf("Links");
-  var scheduleNewLinkColumnIndex = header.indexOf("Custom Scheduler");
-  var dueDateColumnIndex = header.indexOf("Due Date");
-  var categoriesColumnIndex = header.indexOf("Categories");
-  var importanceColumnIndex = header.indexOf("Importance");
-  var costColumnIndex = header.indexOf("Cost");
       const data = generateData();
       const rows = [header];
       [].push.apply(rows,data);
       const range = { values: rows };
       const result = { result: range };
       resolve(result);
-}).then(function(response) {
-          var result = response;
-           
-	   return {response: result};
+  });
+  return promisedResult;
+}
+
+class Mapper {
+    // enum values are stored as enumTypeName;;value1;value2;value3 etc...
+  constructor(header: string[], headerTypes: string[], headerEnums: string[]) {
+      
+      this.header = header;
+      this.headerTypeMap = createTypeMap(headerTypes);
+      this.headerEnumMap = createEnumMap(headerEnums);
+      this.nameColumnIndex = header.indexOf("Name")
+      this.createdTimeColumnIndex = header.indexOf("Created");
+      this.timestampColumnIndex = header.indexOf("Updated");
+      this.editColumnIndex = header.indexOf("Edit Link");
+      this.completionDateColumnIndex = header.indexOf("Completed Date");
+      this.nextScheduledEventColumnIndex = header.indexOf("Edit Event");
+      this.nextScheduledEventLinkColumnIndex = header.indexOf("Edit Event Link");
+      this.scheduleNewLinkColumnIndex = header.indexOf("Custom Scheduler");
+      this.UuidColumnIndex = header.indexOf("UUID");
+      this.OrderColumnIndex = header.indexOf("Order");
+
+      this.columnNameLookup = {};
+      header.forEach((colName,index) => this.columnNameLookup[colName] = index);
+
+      // UDFs - my own - but could be anyone\'s
+      this.doneColumnIndex = header.indexOf("Done");
+      this.loeColumnIndex = header.indexOf("Time Remaining [Hours]");
+      this.originalLoeColumnIndex = header.indexOf("Original LOE");
+      this.milestoneColumnIndex = header.indexOf("Milestone");
+      this.domainColumnIndex = header.indexOf("Domain");
+      this.commentColumnIndex = header.indexOf("Comment");
+      this.dueDateColumnIndex = header.indexOf("Due Date");
+      this.categoriesColumnIndex = header.indexOf("Categories");
+      this.importanceColumnIndex = header.indexOf("Importance");
+      this.externalLinkAnchorColumnIndex = header.indexOf("Ext Link");
+      this.externalLinkColumnIndex = header.indexOf("Links");
+      this.costColumnIndex = header.indexOf("Cost");
+  }
+
+  createTypeMap(header: string[], types: string[]) {
+      typeMap = {};
+      types.foreach((typeName,index) => typeMap[header[index]] = typeName)
+  }
+
+  createEnumMap(enums: string[]) {
+      const enumMap ={};
+      types.foreach((enumValue,index) => { 
+	  enumValues = enumValue.split(";");
+	  const enumName = enumValues[0];
+	  enumValues.shift();
+	  enumMap[enumName] = enumValues;
+      });
+  }
+}
+
+class TestRowDataEntry implements DataEntry {
+  constructor(mapper: Mapper, row: string[]) {
+      this.mapper = mapper;
+      this.row = row;
+  }
+
+   columnNames(): string[] {
+       return mapper.header;
+   }
+
+   get(column: string): any {
+       const type = getType(column);
+       return row[mapper.columnNameLookup[column]];
+   }
+   
+   getType(column: string): ColumnType {
+       return mapper.typeLookup[column];
+   } 
+
+   // only valid for enum type columns
+   getValues(column: string): string[] {
+       return mapper.enumLookup[column];
+   }
+
+   // Mandatory fields
+   name(): string {
+       return get("Name");
+   }
+   createdTime(): Date {
+      return get("Created");
+   }
+   updatedTime(): Date {
+      return get("Updated");
+   }
+   isComplete(): boolean {
+       return get("Completed Date") !== '';
+   }
+   completionTime(): Date {
+      return get("Completed Date");
+   }
+   uuid(): string {
+      return get("UUID");
+   }
+}
+
+function getData(includeDone: boolean):DataEntry[] {
+    var promisedResult = _getDataInternal(includeDone);
+
+    return promisedResult.then(function(response) {
+	const rows = response.result;
+	const header = rows(0);
+	
         }, function(response) {
           return 'Error: ' + response.result.error.message;
         });
-
-	return promisedResult;
-      }
+}
