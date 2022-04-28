@@ -7,6 +7,8 @@ import {SendToDropbox} from "./oauth/dropboxauthrequest";
 import GapiContextProvider from "./oauth/gapicontextprovider"
 import GApiLoginButton from "./oauth/gapiloginbutton"
 import TestStorageDemo from "./storage/testStorageDemo"
+import Editor from "./uicomponents/editor"
+import OrganizeList from "./uicomponents/organize_list"
 
 class App extends React.Component {	
 
@@ -34,7 +36,8 @@ class App extends React.Component {
         </a>
       </header>
      <SendToDropbox/>
-     <TestStorageDemo/>
+       <OrganizeList/>
+       <Editor/>
     </div>
     )
   }
