@@ -10,8 +10,8 @@ const OrganizeList = ({ children }) => {
   
     const { status, error, result } = getSheetsData({apiAvailable: true});
     const workItems = [];
-if (result && result.response && result.response.result && result.response.result.values){
-  for (let  workItem of result.response.result.values ) {
+if (result && result.result && result.result.values){
+  for (let  workItem of result.result.values ) {
     workItems.push(<li>{JSON.stringify(workItem, null, 2)}</li>);  
   }}
 

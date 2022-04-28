@@ -7,7 +7,7 @@
     <title>React App</title> 
     <!-- TODO - move this into react... -->
     <script src="https://apis.google.com/js/api.js" ></script>
-    <script>gapi.load('client', init);
+<!--    <script>gapi.load('client', init);
 
       async function init() {
       // 2. Initialize the JavaScript client library.
@@ -21,7 +21,7 @@
                            'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
          });
       }
-    </script> 
+    </script> -->
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -86,14 +86,14 @@
        *  appropriately. After a sign-in, the API is called.
        */
       function updateSigninStatus(isSignedIn) {
-        if (isSignedIn) {
+/*        if (isSignedIn) {
           authorizeButton.style.display = 'none';
           signoutButton.style.display = 'block';
           listMajors();
         } else {
           authorizeButton.style.display = 'block';
           signoutButton.style.display = 'none';
-        }
+        }*/
       }
 
       /**
@@ -126,7 +126,7 @@
        * Print the names and majors of students in a sample spreadsheet:
        * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
        */
-      function listMajors() {
+/*      function listMajors() {
         gapi.client.sheets.spreadsheets.values.get({
           spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
           range: 'Class Data!A2:E',
@@ -146,12 +146,16 @@
           appendPre('Error: ' + response.result.error.message);
         });
       }
-
+*/
     </script>
 
-    <script async defer src="https://apis.google.com/js/api.js"
+<!--    <script async defer src="https://apis.google.com/js/api.js"
       onload="this.onload=function(){};handleClientLoad()"
       onreadystatechange="if (this.readyState === 'complete') this.onload()">
-    </script>
+    </script> -->
   </body>
 </html>
+
+
+
+

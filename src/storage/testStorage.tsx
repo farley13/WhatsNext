@@ -26,7 +26,7 @@ export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
     } else {
        console.log("gapi now loaded.")
     }
-    listMajors()
+    _getDataInternal(true)
       .then((result) => {
         setPartData({
           state: apiStates.SUCCESS,
