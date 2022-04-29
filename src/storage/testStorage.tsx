@@ -153,16 +153,16 @@ class TestRowDataEntry implements DataEntry {
   }
 
    columnNames(): string[] {
-       return mapper.getHeader();
+       return this.mapper.getHeader();
    }
 
    get(column: string): any {
        // const type = getType(column);
-       return row[mapper.columnNameLookup[column]];
+       return this.row[this.mapper.columnNameLookup[column]];
    }
    
    getType(column: string): ColumnType {
-       return mapper.typeLookup[column];
+       return this.mapper.typeLookup[column];
    } 
 
    // only valid for enum type columns
@@ -172,22 +172,22 @@ class TestRowDataEntry implements DataEntry {
 
    // Mandatory fields
    name(): string {
-       return get("Name");
+       return this.get("Name");
    }
    createdTime(): Date {
-      return get("Created");
+      return this.get("Created");
    }
    updatedTime(): Date {
-      return get("Updated");
+      return this.get("Updated");
    }
    isComplete(): boolean {
-       return get("Completed Date") !== '';
+       return this.get("Completed Date") !== '';
    }
    completionTime(): Date {
-      return get("Completed Date");
+      return this.get("Completed Date");
    }
    uuid(): string {
-      return get("UUID");
+      return this.get("UUID");
    }
 }
 
