@@ -7,7 +7,6 @@ import {SendToDropbox} from "./oauth/dropboxauthrequest";
 import GapiContextProvider from "./oauth/gapicontextprovider"
 import GApiLoginButton from "./oauth/gapiloginbutton"
 import TestStorageDemo from "./storage/testStorageDemo"
-import Editor from "./uicomponents/editor"
 import OrganizeList from "./uicomponents/organize_list"
 
 class App extends React.Component {	
@@ -21,6 +20,8 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
+       <OrganizeList/>
+     <SendToDropbox/>
       <header className="App-header">
     //    <img src='logo' className="App-logo" alt="logo" />
         <p>
@@ -35,14 +36,12 @@ class App extends React.Component {
           Learn React
         </a>
       </header>
-     <SendToDropbox/>
-       <OrganizeList/>
-       <Editor/>
+
     </div>
     )
   }
 }
 
-ReactDOM.render(<React.StrictMode><ErrorBoundary><h1>Hello</h1><App/></ErrorBoundary></React.StrictMode>, document.getElementById('root'));
+ReactDOM.render(<React.StrictMode><ErrorBoundary><App/></ErrorBoundary></React.StrictMode>, document.getElementById('root'));
 
 export default App;

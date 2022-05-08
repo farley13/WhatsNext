@@ -27,13 +27,38 @@ module.exports = {
         }
       },
       {
-        test: (m) => { return /\.css$/.test(m) },
-        exclude: (m) => { return /node_modules/.test(m) },
+        // For pure CSS - /\.css$/i,
+        // For Sass/SCSS - /\.((c|sa|sc)ss)$/i,
+        // For Less - /\.((c|le)ss)$/i,
+        test: (m) => { return /\.((c|sa|sc)ss)$/.test(m) },
+	exclude: (m) => { return /node_modules/.test(m) },
         use: [
-          'style-loader',
-          'css-loader'
-        ]
+          "style-loader",
+          {
+            loader: "css-loader",
+            options: {
+              // Run `postcss-loader` on each CSS `@import` and CSS modules/ICSS imports, do not forget that `sass-loader` compile non CSS `@import`'s into a single file
+              // If you need run `sass-loader` and `postcss-loader` on each CSS `@import` please set it to `2`
+              importLoaders: 1,
+	      modules: true,
+            },
+          },
+/*          {
+            loader: "postcss-loader",
+            options: { plugins: () => [postcssPresetEnv({ stage: 0 })] },
+          },
+          // Can be `less-loader`
+          {
+            loader: "sass-loader",
+          },*/
+        ],
       },
+      // For webpack v5
+/*      {
+        test: (m) => { return /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/.test(m) },
+        // More information here https://webpack.js.org/guides/asset-modules/
+        type: "asset",
+      },*/
       {
         test: (m) => { return /\.(png|jp(e*)g|svg)$/.test(m) },
         exclude: (m) => { return /node_modules/.test(m) },
