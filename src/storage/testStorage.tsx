@@ -1,32 +1,54 @@
 import React from 'react';
 
 // Use https://dev.to/nicomartin/the-right-way-to-fetch-data-with-react-hooks-48gc as the example...
+// and https://github.com/chibuike07/data_collection_react/blob/master/src/Component/Buttons/ButtonGroup.jsx for crud updates
+// TODO - this should be broken up into the REACT interface (get data hook)
+// and the method(s) of storing/looking up data - localstorage, in memory or github etc - almost none of this is specific to in memory / test data right now
+// the API for this should be
+// {{state, result,error}, update([...dataRows])} = getSheetsData(query,storageStrategy)
+// where storage strategy takes in "setPartData"
+// and the production storage strategy delegates to two other strategies, reading/writing to local and then remote, retrying remote until it succeeds with some backoff.
+// syncing all local updates not yet written to remote using local state
 import { apiStates, setPartData } from './apicommon';
 
-
-export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
+export const getSheetsData = (query: storageListQuery) => {
   const [data, setData] = React.useState({
+      // THOUGHT - state and error probably need to be a little more complex if we delegate to more than one backend
+      // we need to reduce these from multiple states to a single one
+      // maybe the backend components and aggregate component can handle this instead of us...
     state: apiStates.LOADING,
     error: '',
     result: [],
-    apiAvailable: apiAvailableInput
+    updateCount: 0,
+    apiAvailable: true
   });
 
+ // TODO move these to useEffect...
  const setPartData = (partialData) => setData({ ...data, ...partialData });
 
+ // THOUGHT this might deserve to be it's own hook
+ const updateData = ( items: DataEntry[] ) => {
+     // updateDataLocally then update data / state
+     // && updateDataRemotely then update data / state
+     console.log('Running update datae')
+     setPartData({
+	 updateCount: data.updateCount + 1
+     });
+    };
+
   React.useEffect(() => {
-     console.log("Running Get Sheets with api:" + apiAvailableInput)
+     console.log("Running Get Sheets with api:" + true)
 
     setPartData({
       state: apiStates.LOADING
     });
-    if (!apiAvailableInput) {
+    if (!data.apiAvailable) {
        console.log("No gapi loaded yet.")
-       return;  
+       return { api: {}, updateData };  
     } else {
        console.log("gapi now loaded.")
     }
-    getData(true)
+    getData(query)
       .then((result) => {
         setPartData({
           state: apiStates.SUCCESS,
@@ -37,15 +59,15 @@ export const getSheetsData = ({apiAvailable: apiAvailableInput }) => {
        setPartData({
           state: apiStates.ERROR,
           error: 'fetch failed: ' + error + error.stack
-        });
+       });
       });
- }, [apiAvailableInput]);
+ }, [data.apiAvailable]);
 
-  return data;
+  return { api: data, updateData };
 };
 
-function getData(includeDone: boolean):DataEntry[] {
-    var promisedResult = _getDataInternal(includeDone);
+function getData(query: storageListQuery):DataEntry[] {
+    var promisedResult = _getDataInternal(query);
 
     return promisedResult.then(function(response) {
 	console.log(JSON.stringify(response, null,2));
@@ -74,7 +96,7 @@ function generateData() {
   ]
 }
 
-function _getDataInternal(includeDone: boolean):string[][] {
+function _getDataInternal(query: storageListQuery):string[][] {
 
     var promisedResult = new Promise((resolve, reject) => {
       const header = ["Name","Created","Updated","Edit Link", "Comment", "Done", "Time Remaining [Hours]","Original LOE", "Completed Date","Milestone","Edit Event","Edit Event Link","UUID","Order", "Domain", "Ext Link", "Links", "Custom Scheduler", "Due Date","Categories", "Importance","Cost"];
@@ -87,6 +109,13 @@ function _getDataInternal(includeDone: boolean):string[][] {
       resolve(result);
   });
   return promisedResult;
+}
+
+interface StorageListQuery {
+    ids?;
+    dateSince?;
+    stringMatch?;
+    parameterValues?;
 }
 
 class Mapper {
@@ -161,6 +190,11 @@ class TestRowDataEntry implements DataEntry {
        return this.row[this.mapper.columnNameLookup[column]];
    }
    
+   set(column: string, value: any) {
+       // const type = getType(column);
+       this.row[this.mapper.columnNameLookup[column]] = value;
+   }
+
    getType(column: string): ColumnType {
        return this.mapper.typeLookup[column];
    } 
@@ -188,6 +222,9 @@ class TestRowDataEntry implements DataEntry {
    }
    uuid(): string {
       return this.get("UUID");
+   }
+   copy(): DataRowEntry {
+       return new TestRowDataEntry(this.mapper,[...this.row]);
    }
 }
 

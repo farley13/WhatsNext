@@ -6,29 +6,68 @@ import { apiStates, setPartData } from './apicommon';
 import { getSheetsData } from "../storage/testStorage"
 
 
-const Editor = ({ workItem, children }) => {
+const Editor = ({ workItem, updateData, children }) => {
   
     const { status, error, result } = getSheetsData({apiAvailable: true});
     const firstResult = workItem;
-    var editor = [];
+    let editor = [];
     // TODO pull this from our storage
     const tempEditorOrder = ["Name","Comment", "Importance","Done", "Time Remaining [Hours]","Milestone","Domain", "Ext Link","Due Date","Categories","Cost"];
+    const [state, setState] = React.useState({});
+    let debugout = "workitem;" + JSON.stringify(workItem) + " status:"+ status;
+
+    const handleInputChange = (event) => {
+	const target = event.target;
+	const value = target.type === 'checkbox' ? target.checked : target.value;
+	const name = target.name;
+	setState({
+	    ...state, 
+	    [name]: value    });
+    }
+
+    const handleSave = () => {
+	if (firstResult) {
+	    const updatedWorkItem = firstResult.copy();
+	    for (let i = 0; i < tempEditorOrder.length; i++) {
+		const itemName = tempEditorOrder[i];
+		const itemValue = firstResult.get(tempEditorOrder[i]);
+		updatedWorkItem.set(itemName, itemValue);
+	    }
+	    updateData([updatedWorkItem]);
+	}
+    }
+
+    React.useEffect(() => {
+	if (firstResult) {
+	    const initialState = {};
+		for (let i = 0; i < tempEditorOrder.length; i++) {
+		    const itemName = tempEditorOrder[i];
+		    const itemValue = firstResult.get(tempEditorOrder[i]);
+		    initialState[itemName] = itemValue;
+		}
+		setState({
+		    ...initialState,
+		});	
+	    }
+	},[firstResult]);
+
+
     if (firstResult) {
-	editor.push(<div>
-		       <label>Name</label>
-		       <input value={firstResult.name()}/>
-		    </div>);
-	for (let i = 1; i < tempEditorOrder.length; i++) {
+
+	for (let i = 0; i < tempEditorOrder.length; i++) {
+	    const itemName = tempEditorOrder[i];
 	    editor.push(<div>
-			   <label>{tempEditorOrder[i]}</label>
-			   <input value={firstResult.get(tempEditorOrder[i])}/>
+			<label>{itemName}</label>
+			<input name={itemName} value={state[itemName]} onChange={handleInputChange} />
 			</div>);
 	}
-
+	
     } 
   return (
     <>
 	  {editor}
+          <button onClick={handleSave}>Save</button>
+      <p>{debugout}</p>
       <p>Editor got some hot data: {status} {error}</p>
     </>
   )

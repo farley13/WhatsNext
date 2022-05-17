@@ -13,8 +13,17 @@ Using mocha, enzyme, chai and jest. For both UI and non-ui. Pretty much everythi
 is going to be eventually break the code base up into components.
 
 #### Next Items
-[] Create New / Edit UI
-[] Create List UI
-[] Finish up and cleanup hardcoded storage
-[] Add component tests
+[x] Create New / Edit UI
+[x] Create List UI
+[x] Finish up and cleanup hardcoded storage
+[] Saving to in memory
+[] Component tests
+[] Support for enums
+[] Support for filtering and sorting
+[] Support for local storage
+[] Support for git
+[] Support for google calendar
+[] SubItems
+[] SubItems with Different Types
+[] Custom Aggregations of subitems (food etc)
 [] Break major parts up into packages

@@ -117,6 +117,8 @@ parseColumnType(stringType: string): { new(textToParse:string): ColumnData } {
 interface DataEntry {
    columnNames: string[];
    get(column: string): any;
+   set(column: string, value: any);
+
    getType(column: string): ColumnType;
 
    // only valid for enum type columns
@@ -129,6 +131,7 @@ interface DataEntry {
    isComplete: boolean;
    completionTime: Date;
    uuid: string;
+   copy: DataEntry;
 }
 
 interface Storage {

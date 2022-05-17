@@ -10,7 +10,7 @@ import css from "./organize_list.module.css";
 
 const OrganizeList = ({ children }) => {
   
-    const { status, error, result } = getSheetsData({apiAvailable: true});
+    const { api:{ status, error, result, updateCount }, updateData } = getSheetsData({});
     const [ activeWorkItem, setActiveWorkItem ] = React.useState(null)
     const workItems = [];
     if (result){
@@ -21,8 +21,8 @@ const OrganizeList = ({ children }) => {
 	    const itemMarkup = [];
 	    // TODO - this should come from config
 	    const listLayout = [["Name", "Importance"], 
-				["Domain", "Due Date", "Edit Event",<button>Edit</button>,<button>Reschedule</button>],
-				["Time Remaining [Hours]","Done",<button>mark in progress</button>,<button>mark complete</button>],
+				["Domain", "Due Date", "Edit Event",<button>EditDont</button>,<button>RescheduleDont</button>],
+				["Time Remaining [Hours]","Done",<button>mark in progressDont</button>,<button>mark completeDont</button>],
 				[<button onClick={() => setActiveWorkItem(workItem)}>edit</button>, "Comments"]];
 	    listLayout.forEach((layoutGroup) => { 
 		const layoutGroupRender = [];
@@ -46,8 +46,8 @@ const OrganizeList = ({ children }) => {
       <ol>
 	  {workItems}
       </ol>
-      <p>Organize List got some hot data {status} {error}</p>
-      <Editor workItem={activeWorkItem}/>
+      <p>Organize List got some hot data {status} {error} save count: {updateCount}</p>
+      <Editor workItem={activeWorkItem} updateData={updateData}/>
     </>
   )
 };
