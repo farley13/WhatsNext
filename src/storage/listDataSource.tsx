@@ -10,8 +10,11 @@ import React from 'react';
 // and the production storage strategy delegates to two other strategies, reading/writing to local and then remote, retrying remote until it succeeds with some backoff.
 // syncing all local updates not yet written to remote using local state
 import { apiStates, setPartData } from './apicommon';
+import { HardcodedStorage } from './hardcodedStorage';
 
-export const getSheetsData = (query: storageListQuery) => {
+
+
+export const createDatasource = ({query: storageListQuery, storage: Storage}) => {
   const [data, setData] = React.useState({
       // THOUGHT - state and error probably need to be a little more complex if we delegate to more than one backend
       // we need to reduce these from multiple states to a single one
@@ -22,6 +25,9 @@ export const getSheetsData = (query: storageListQuery) => {
     updateCount: 0,
     apiAvailable: true
   });
+
+ const storage = new HardcodedStorage();
+ const query = {};
 
  // TODO move these to useEffect...
  const setPartData = (partialData) => setData({ ...data, ...partialData });
@@ -34,7 +40,21 @@ export const getSheetsData = (query: storageListQuery) => {
      setPartData({
 	 updateCount: data.updateCount + 1
      });
-    };
+     storage.addOrUpdateData(items)
+     .then(mapDataToEntries)
+	 .then((result) => {
+        setPartData({
+          state: apiStates.SUCCESS,
+          result: result // TODO this should really update just the workitems that were updated
+        });
+      })
+      .catch((error) => {
+       setPartData({
+          state: apiStates.ERROR,
+          error: 'fetch failed: ' + error + error.stack
+       });
+      });
+  };
 
   React.useEffect(() => {
      console.log("Running Get Sheets with api:" + true)
@@ -48,11 +68,12 @@ export const getSheetsData = (query: storageListQuery) => {
     } else {
        console.log("gapi now loaded.")
     }
-    getData(query)
+    storage.getData(query)
+      .then(mapDataToEntries)
       .then((result) => {
         setPartData({
           state: apiStates.SUCCESS,
-          result
+          result: result
         });
       })
       .catch((error) => {
@@ -66,10 +87,8 @@ export const getSheetsData = (query: storageListQuery) => {
   return { api: data, updateData };
 };
 
-function getData(query: storageListQuery):DataEntry[] {
-    var promisedResult = _getDataInternal(query);
-
-    return promisedResult.then(function(response) {
+function mapDataToEntries(response):DataEntry[] {
+    
 	console.log(JSON.stringify(response, null,2));
 	//const rows = [["a","b"],[1,2],[3,5]]; // response.result
 	const rows = response.result.values; 
@@ -81,42 +100,8 @@ function getData(query: storageListQuery):DataEntry[] {
 	    dataEntries.push(newEntry);
 	}
 	return dataEntries;
-        }, function(response) {
-          return 'Error: ' + response.result.error.message;
-        });
 }
 
-function generateData() {
-  return [[
-    "Get garden bench", 1647315976, 1647315999,"Edit Link", "", "Ready", 40, 40, 0,"","","","ABC123",34684, "Gardening", "https://www.gardening.com", "", "", 0,"Fast, Expensive", "Critical","$$ (100-300)"
-  ],
-  [
-    "Cleanup Home", 1647315976, 1647315999,"Edit Link", "", "In Progress", 2, 3, 0,"","","","ABC124",34684, "Home", "https://www.gardening.com", "", "", 0,"Fast", "Critical",""
-  ]
-  ]
-}
-
-function _getDataInternal(query: storageListQuery):string[][] {
-
-    var promisedResult = new Promise((resolve, reject) => {
-      const header = ["Name","Created","Updated","Edit Link", "Comment", "Done", "Time Remaining [Hours]","Original LOE", "Completed Date","Milestone","Edit Event","Edit Event Link","UUID","Order", "Domain", "Ext Link", "Links", "Custom Scheduler", "Due Date","Categories", "Importance","Cost"];
-  
-      const data = generateData();
-      const rows = [header];
-      [].push.apply(rows,data);
-      const range = { values: rows };
-      const result = { result: range };
-      resolve(result);
-  });
-  return promisedResult;
-}
-
-interface StorageListQuery {
-    ids?;
-    dateSince?;
-    stringMatch?;
-    parameterValues?;
-}
 
 class Mapper {
     // enum values are stored as enumTypeName;;value1;value2;value3 etc...
@@ -227,4 +212,3 @@ class TestRowDataEntry implements DataEntry {
        return new TestRowDataEntry(this.mapper,[...this.row]);
    }
 }
-

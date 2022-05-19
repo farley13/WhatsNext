@@ -3,16 +3,19 @@ import React from 'react';
 // Use https://dev.to/nicomartin/the-right-way-to-fetch-data-with-react-hooks-48gc as the example...
 import { apiStates, setPartData } from './apicommon';
 
-import { getSheetsData } from "../storage/testStorage"
+import { HardcodedStorage } from "../storage/hardcodedStorage";
+import { createDatasource } from "../storage/listDataSource";
 import Editor from "./editor"
 
 import css from "./organize_list.module.css";
 
 const OrganizeList = ({ children }) => {
   
-    const { api:{ status, error, result, updateCount }, updateData } = getSheetsData({});
-    const [ activeWorkItem, setActiveWorkItem ] = React.useState(null)
+    const hardcodedStorage = new HardcodedStorage();
+    const { api:{ status, error, result, updateCount }, updateData } = createDatasource({query: {}, storage: hardcodedStorage });
+    const [ activeWorkItem, setActiveWorkItem ] = React.useState(null);
     const workItems = [];
+    console.log("result:  " + JSON.stringify(result));
     if (result){
 	for (let  workItem of result ) {
 	    if (!activeWorkItem) {

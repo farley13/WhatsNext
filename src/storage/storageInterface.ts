@@ -134,8 +134,15 @@ interface DataEntry {
    copy: DataEntry;
 }
 
-interface Storage {
-   
-   getData(includeDone: boolean): DataEntry[];
-
+interface Storage {   
+   getData(query: StorageListQuery): Promise<DataEntry[]>;
+   addOrUpdateData(DataEnty[] updatedData): Promise<DataEntry[]>;
 }
+
+interface StorageListQuery {
+    ids?;
+    dateSince?;
+    stringMatch?;
+    parameterValues?;
+}
+

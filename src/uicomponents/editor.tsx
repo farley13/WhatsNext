@@ -3,18 +3,14 @@ import React from 'react';
 // Use https://dev.to/nicomartin/the-right-way-to-fetch-data-with-react-hooks-48gc as the example...
 import { apiStates, setPartData } from './apicommon';
 
-import { getSheetsData } from "../storage/testStorage"
-
-
 const Editor = ({ workItem, updateData, children }) => {
   
-    const { status, error, result } = getSheetsData({apiAvailable: true});
     const firstResult = workItem;
     let editor = [];
     // TODO pull this from our storage
     const tempEditorOrder = ["Name","Comment", "Importance","Done", "Time Remaining [Hours]","Milestone","Domain", "Ext Link","Due Date","Categories","Cost"];
     const [state, setState] = React.useState({});
-    let debugout = "workitem;" + JSON.stringify(workItem) + " status:"+ status;
+    let debugout = "workitem;" + JSON.stringify(workItem);
 
     const handleInputChange = (event) => {
 	const target = event.target;
@@ -68,7 +64,6 @@ const Editor = ({ workItem, updateData, children }) => {
 	  {editor}
           <button onClick={handleSave}>Save</button>
       <p>{debugout}</p>
-      <p>Editor got some hot data: {status} {error}</p>
     </>
   )
 };
