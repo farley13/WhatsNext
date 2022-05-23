@@ -10,8 +10,8 @@
     "css-loader": "2.1.x",
     "express": "4.16.x",
     "file-loader": "^4.0.0",
-    "react": "17.x.x",
-    "react-dom": "17.x.x",
+    "react": "18.x.x",
+    "react-dom": "18.x.x",
     "style-loader": "0.x.x",
     "url-loader": "^2.0.0",
     "webpack": "4.x.x",
@@ -31,11 +31,12 @@
     "eject": "npx eject"
   },
   "devDependencies": {
-    "@types/react": "17.x.x",
-    "@types/react-dom": "17.x.x",
+    "@types/react": "18.x.x",
+    "@types/react-dom": "18.x.x",
     "@types/gapi": "0.x.x",
     "@types/jest": "27.x.x",
     "@babel/plugin-transform-runtime": "x.x.x",
-    "typescript": "4.4.2"
+    "typescript": "4.4.2",
+    "@testing-library/react": "13.x.x"
   }
 }

@@ -1,12 +1,11 @@
 
-interface ColumnData {
-  new(stringToParse: string): ColumnData;
-  serialize(): string;
+export interface ColumnData {
+   serialize(): string;
 }
 
-
+// TODO remove 'Data' from the end of each of these
 class UnknownData implements ColumnData {
-  constructor(stringToParse: string): UnknownData {
+  constructor(stringToParse: string) {
      // do nothing;
   }
   serialize(): string {
@@ -14,53 +13,53 @@ class UnknownData implements ColumnData {
   }
 }
 
-class ShortTextData implements ColumnData{
-  const string text;
+export class ShortTextData implements ColumnData{
+  private readonly text: string;
   constructor(stringToParse: string) {
      this.text = stringToParse;			     
   }
   
   serialize(): string {
-     return text;
+     return this.text;
   }
 }
 
-class LongTexData implements ColumnData {
-  const string text;
+class LongTextData implements ColumnData {
+   private readonly text: string;
   constructor(stringToParse: string) {
      this.text = stringToParse;			     
   }
 
   serialize(): string {
-     return text;
+     return this.text;
   }
 }
 
 class IntegerData implements ColumnData {
-  const num: number;
+  private readonly num: number;
   constructor(stringToParse: string) {
      this.num = Math.round(Number(stringToParse));			     
   }
 
   serialize(): string {
-     return num.toString();
+     return this.num.toString();
   }
 }
 
 class NumberData implements ColumnData {
-  const num: number;
+  private readonly num: number;
   constructor(stringToParse: string) {
      this.num = Number(stringToParse);			     
   }
 
   serialize(): string {
-     return num.toString();
+     return this.num.toString();
   }
 }
 
 class LinkData implements ColumnData {
-  const link: string;
-  const anchor: string;
+  private readonly link: string;
+  private readonly anchor: string;
   constructor(stringToParse: string) {
      const parsedJson = JSON.parse(stringToParse);
      this.link = parsedJson.link.toString();
@@ -75,18 +74,18 @@ class LinkData implements ColumnData {
 }
 
 class EnumData implements ColumnData {
-  currentValue: string;
+  private readonly currentValue: string;
   // TODO - validate this maps to one of the enum values somewhere...
   constructor(stringToParse: string) {
      this.currentValue = stringToParse;			     
   }
 
   serialize(): string {
-     return currentValue;
+     return this.currentValue;
   }
 }
 
-type ColumnTypes =
+export type ColumnType =
    UnknownData |
    ShortTextData |
    LongTextData |
@@ -99,25 +98,25 @@ class ColumnTypeParser {
 static columnTypeMapping: { [key:string]: { new(textToParse:string): ColumnData}; } = {};
 static {
    
-     columnDataMapping["words"] = ShortTextData;
-     columnDataMapping["paragraph"] = LongTextData;
-     columnDataMapping["integer"] = IntegerData;
-     columnDataMapping["number"] = NumberData;
-     columnDataMapping["link"] = LinkData;
-     columnDataMapping["categories"] = EnumData;
+     ColumnTypeParser.columnTypeMapping["words"] = ShortTextData;
+     ColumnTypeParser.columnTypeMapping["paragraph"] = LongTextData;
+     ColumnTypeParser.columnTypeMapping["integer"] = IntegerData;
+     ColumnTypeParser.columnTypeMapping["number"] = NumberData;
+     ColumnTypeParser.columnTypeMapping["link"] = LinkData;
+     ColumnTypeParser.columnTypeMapping["categories"] = EnumData;
 }
 parseColumnType(stringType: string): { new(textToParse:string): ColumnData } {
-     const definedType = columnTypeMapping[stringType];
+     const definedType = ColumnTypeParser.columnTypeMapping[stringType];
      if(!!definedType){
-	return Undefined;
+	return UnknownData;
      }
      return definedType;
 }
 }
-interface DataEntry {
-   columnNames: string[];
+export interface DataEntry {
+   columnNames(): string[];
    get(column: string): any;
-   set(column: string, value: any);
+   set(column: string, value: any): void;
 
    getType(column: string): ColumnType;
 
@@ -125,24 +124,23 @@ interface DataEntry {
    getValues(column: string): string[];
 
    // Mandatory fields
-   name: string;
-   createdTime: Date;
-   updatedTime: Date;
-   isComplete: boolean;
-   completionTime: Date;
-   uuid: string;
-   copy: DataEntry;
+   name(): string;
+   createdTime(): Date;
+   updatedTime(): Date;
+   isComplete(): boolean;
+   completionTime(): Date;
+   uuid(): string;
+   copy(): DataEntry;
 }
 
-interface Storage {   
+export interface Storage {   
    getData(query: StorageListQuery): Promise<DataEntry[]>;
-   addOrUpdateData(DataEnty[] updatedData): Promise<DataEntry[]>;
+   addOrUpdateData(updatedData: DataEntry[]): Promise<DataEntry[]>;
 }
 
-interface StorageListQuery {
-    ids?;
-    dateSince?;
-    stringMatch?;
-    parameterValues?;
+export interface StorageListQuery {
+    ids?:string[];
+    dateSince?:string;
+    stringMatch?:string;
+    parameterValues?:{key: string, value: string}[];
 }
-

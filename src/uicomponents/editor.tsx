@@ -1,18 +1,26 @@
 import React from 'react';
 
-// Use https://dev.to/nicomartin/the-right-way-to-fetch-data-with-react-hooks-48gc as the example...
-import { apiStates, setPartData } from './apicommon';
+import { DataEntry } from '../storage/storageInterface';
 
-const Editor = ({ workItem, updateData, children }) => {
+interface EditorProps {
+    workItem: DataEntry | null,
+    updateData: (items: DataEntry[]) => void,
+}
+
+interface EditorState {
+    [index: string]: any;
+}
+
+const Editor: React.FC<EditorProps> = ({ workItem, updateData }) => {
   
     const firstResult = workItem;
     let editor = [];
     // TODO pull this from our storage
     const tempEditorOrder = ["Name","Comment", "Importance","Done", "Time Remaining [Hours]","Milestone","Domain", "Ext Link","Due Date","Categories","Cost"];
-    const [state, setState] = React.useState({});
+    const [state, setState] = React.useState<EditorState>({} as EditorState);
     let debugout = "workitem;" + JSON.stringify(workItem);
 
-    const handleInputChange = (event) => {
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 	const target = event.target;
 	const value = target.type === 'checkbox' ? target.checked : target.value;
 	const name = target.name;
@@ -26,7 +34,7 @@ const Editor = ({ workItem, updateData, children }) => {
 	    const updatedWorkItem = firstResult.copy();
 	    for (let i = 0; i < tempEditorOrder.length; i++) {
 		const itemName = tempEditorOrder[i];
-		const itemValue = firstResult.get(tempEditorOrder[i]);
+		const itemValue: any = firstResult.get(tempEditorOrder[i]);
 		updatedWorkItem.set(itemName, itemValue);
 	    }
 	    updateData([updatedWorkItem]);
@@ -35,15 +43,15 @@ const Editor = ({ workItem, updateData, children }) => {
 
     React.useEffect(() => {
 	if (firstResult) {
-	    const initialState = {};
-		for (let i = 0; i < tempEditorOrder.length; i++) {
-		    const itemName = tempEditorOrder[i];
-		    const itemValue = firstResult.get(tempEditorOrder[i]);
-		    initialState[itemName] = itemValue;
-		}
-		setState({
-		    ...initialState,
-		});	
+	    const initialState: EditorState = {};
+	    for (let i = 0; i < tempEditorOrder.length; i++) {
+		const itemName = tempEditorOrder[i];
+		const itemValue: any = firstResult.get(tempEditorOrder[i]);
+		initialState[itemName] = itemValue;
+	    }
+	    setState({
+		 ...initialState,
+	    });	
 	    }
 	},[firstResult]);
 
@@ -53,8 +61,9 @@ const Editor = ({ workItem, updateData, children }) => {
 	for (let i = 0; i < tempEditorOrder.length; i++) {
 	    const itemName = tempEditorOrder[i];
 	    editor.push(<div>
-			<label>{itemName}</label>
-			<input name={itemName} value={state[itemName]} onChange={handleInputChange} />
+			<label>{itemName}
+			   <input name={itemName} value={state[itemName]} onChange={handleInputChange} />
+			</label>
 			</div>);
 	}
 	
