@@ -26,10 +26,11 @@ function generateData(): DataEntry[] {
     const columnTypes = [{name: "Name", type: (value: string) => new ShortTextData(value)},{name:"Description", type: (value: string)=> new ShortTextData(value)}];
     const enumValues: {name: string, values: string[]}[] = [];
 
-  return [
-      new HardcodedDataEntry({ data:{Name: "Start things", "Description": "Do it!"}, columns: columnNames, columnTypes: columnTypes, enumValues: enumValues}),
-      new HardcodedDataEntry({ data:{Name: "Finish things", "Description": "Do it!"}, columns: columnNames, columnTypes: columnTypes, enumValues: enumValues}),
-  ]
+  const entries: DataEntry[] = [
+      new HardcodedDataEntry({ "data":{"Name": "Start things", "Description": "Do it!"}, columns: columnNames, columnTypes: columnTypes, enumValues: enumValues}),
+      new HardcodedDataEntry({ "data":{"Name": "Finish things", "Description": "Do it!"}, columns: columnNames, columnTypes: columnTypes, enumValues: enumValues}),
+  ];
+    return entries;
 }
 
 function _getDataInternal(query: StorageListQuery):Promise<DataEntry[]> {
@@ -56,6 +57,8 @@ interface HardcodedData {
 export class HardcodedDataEntry implements DataEntry {
 
   constructor(private readonly data: HardcodedData) {
+      // For some reason Firefox needs this...
+      this.data = data;
   }
 
    columnNames(): string[] {

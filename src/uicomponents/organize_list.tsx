@@ -49,13 +49,13 @@ const OrganizeList: React.FC<OrganizeListProps> = () => {
     
   return (
     <>
-/*      <ol>
+      <ol>
 	  {workItems}
       </ol>
       <p>Organize List got some hot data |status|</p>
       <p>{error}</p>
      <p>save count: {updateCount}</p>
-      <Editor workItem={activeWorkItem} updateData={updateData}/> */
+      <Editor workItem={activeWorkItem} updateData={updateData}/> 
     </>
   )
 };

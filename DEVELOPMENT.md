@@ -16,8 +16,8 @@ is going to be eventually break the code base up into components.
 [x] Create New / Edit UI
 [x] Create List UI
 [x] Finish up and cleanup hardcoded storage
-[] Saving to in memory
-[] Component tests
+[x] Component tests
+[] Saving to disk
 [] Support for enums
 [] Support for filtering and sorting
 [] Support for local storage
